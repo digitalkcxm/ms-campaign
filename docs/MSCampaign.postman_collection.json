@@ -1,0 +1,189 @@
+{
+	"info": {
+		"_postman_id": "200bf923-0dae-4911-94c5-cf6f2a899fde",
+		"name": "MSCampaign",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "15968893"
+	},
+	"item": [
+		{
+			"name": "Create",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{Authorization}}",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "{{tenantID}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Campanha 3\",\n    \"create_by\": 2,\n    \"id_workflow\": \"46d375f1-11b8-4ed8-a21a-784d689282bf\",\n    \"draft\": true,\n    \"repeat\": false,\n    \"start_date\": \"\",\n    \"repetition_rule\": {\n        // \"repeat_interval\": 1,\n        \"days_of_week\": [1], //OBRIGATORIO SE IGUAL DE ALL_DAYS [1,2,3,4,5,6,7]\n        \"repeat_type\":\"ALL_DAYS\",\n        \"repeat_until\": \"2024-08-04\"\n    },\n    \"filter\": [\n        {\n            \"rules\": [\n                {\n                    \"value\": [\n                        \"cargo1\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": [\n                        \"cargo2\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": \"Luiz\",\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.nome\"\n                }\n            ],\n            \"operator\": \"OR\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URLBase}}/campaign",
+					"host": [
+						"{{URLBase}}"
+					],
+					"path": [
+						"campaign"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetAll",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{Authorization}}",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "{{tenantID}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{URLBase}}/campaign?search=campanha&status=scheduled",
+					"host": [
+						"{{URLBase}}"
+					],
+					"path": [
+						"campaign"
+					],
+					"query": [
+						{
+							"key": "search",
+							"value": "campanha"
+						},
+						{
+							"key": "status",
+							"value": "scheduled"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetByID",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{Authorization}}",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "{{tenantID}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{URLBase}}/campaign/e576d3e8-f24d-4b81-a038-c4a37bbb9658",
+					"host": [
+						"{{URLBase}}"
+					],
+					"path": [
+						"campaign",
+						"e576d3e8-f24d-4b81-a038-c4a37bbb9658"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{Authorization}}",
+						"type": "text"
+					},
+					{
+						"key": "x-tenant-id",
+						"value": "{{tenantID}}",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"id\": \"e576d3e8-f24d-4b81-a038-c4a37bbb9658\",\n    \"name\": \"Campanha 1\",\n    \"repetition_rule\": {\n        \"repeat_type\": \"ALL_DAYS\",\n        \"days_of_week\": [\n            1\n        ],\n        \"repeat_until\": \"2024-08-04\"\n    },\n    \"created_by\": 2,\n    \"created_at\": \"04/02/2024 16:38:30\",\n    \"start_date\": \"04/02/2024 16:38:30\",\n    \"status\": \"scheduled\",\n    \"active\": true,\n    \"filter\": [\n        {\n            \"rules\": [\n                {\n                    \"value\": [\n                        \"cargo1\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": [\n                        \"cargo2\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": \"Luiz\",\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.nome\"\n                }\n            ],\n            \"operator\": \"OR\"\n        }\n    ]\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{URLBase}}/campaign/e576d3e8-f24d-4b81-a038-c4a37bbb9658",
+					"host": [
+						"{{URLBase}}"
+					],
+					"path": [
+						"campaign",
+						"e576d3e8-f24d-4b81-a038-c4a37bbb9658"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "URLBase",
+			"value": "http://localhost:4445/api/v1",
+			"type": "string"
+		},
+		{
+			"key": "Authorization",
+			"value": "deb13d5add30d96b023ebeb3377a31c9",
+			"type": "string"
+		},
+		{
+			"key": "tenantID",
+			"value": "04171c72-fb8e-403e-97e6-403791f4a360",
+			"type": "string"
+		}
+	]
+}
