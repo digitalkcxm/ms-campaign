@@ -17,7 +17,10 @@ export default (database, logger, redis) => {
 
   router.get('/', async (req, res, next) => {
     try {
-      const result = await campaignController.getAll(req.company)
+      let { search, status, limit, offset } = req.query
+      if(status) status = JSON.parse(status)
+
+      const result = await campaignController.getAll(req.company, search, status, limit, offset)
 
       return res.status(200).json(result)
     } catch (err) {

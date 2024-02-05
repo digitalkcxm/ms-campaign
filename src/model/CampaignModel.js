@@ -5,9 +5,9 @@ export default class CampaignModel {
     this.database = database
   }
 
-  async getAll(id_company) {
+  async getAll(id_company, search, status, limit = 50, offset = 0) {
     try {
-      return await this.database('campaign')
+      let query = this.database('campaign')
         .select({
           id: 'campaign.id',
           name: 'campaign.name',
@@ -21,6 +21,14 @@ export default class CampaignModel {
         .innerJoin('campaign_version', 'campaign_version.id_campaign', 'campaign.id')
         .innerJoin('company', 'company.id', 'campaign.id_company')
         .where({ 'campaign.id_company': id_company, 'campaign_version.active': true })
+        .limit(limit)
+        .offset(offset)
+
+      search && query.andWhere('campaign.name', 'ILIKE', `%${search}%`)
+      status.length > 0 && query.andWhere('campaign.id_status', 'IN', status)
+
+      return await query
+
     } catch (err) {
       throw new ErrorHelper('CampaignModel', 'getAll', 'An error occurred when trying get campaign.', { id_company }, err)
     }
