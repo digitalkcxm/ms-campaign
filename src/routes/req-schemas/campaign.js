@@ -47,42 +47,42 @@ const create = (() => {
         },
       },
     },
-    'repetition_rule.repeat_type': {
-      isIn: {
-        options: [['ALL_DAYS', 'EACH_DAY', 'EACH_WEEK', 'EACH_MONTH', 'EACH_YEAR']],
-        errorMessage: 'O valor informado é invalido, os valores validos são: ALL_DAYS, EACH_DAY, EACH_WEEK, EACH_MONTH, EACH_YEAR.'
-      }
-    },
-    'repetition_rule.repeat_interval': {
-      custom: {
-        options: (value, { req }) => {
-          if (req.body.repetition_rule.repeat_type != 'ALL_DAYS' && !value) {
-            throw new Error('O valor repeat_interval é obrigatório.')
-          }
+    // 'repetition_rule.repeat_type': {
+    //   isIn: {
+    //     options: [['ALL_DAYS', 'EACH_DAY', 'EACH_WEEK', 'EACH_MONTH', 'EACH_YEAR']],
+    //     errorMessage: 'O valor informado é invalido, os valores validos são: ALL_DAYS, EACH_DAY, EACH_WEEK, EACH_MONTH, EACH_YEAR.'
+    //   }
+    // },
+    // 'repetition_rule.repeat_interval': {
+    //   custom: {
+    //     options: (value, { req }) => {
+    //       if (req.body.repetition_rule.repeat_type != 'ALL_DAYS' && !value) {
+    //         throw new Error('O valor repeat_interval é obrigatório.')
+    //       }
 
-          if(value && typeof req.body.repetition_rule.repeat_interval != 'number') {
-            throw new Error('O campo "repetition_rule.repeat_interval" deve ser do tipo inteiro.')
-          }
+    //       if(value && typeof req.body.repetition_rule.repeat_interval != 'number') {
+    //         throw new Error('O campo "repetition_rule.repeat_interval" deve ser do tipo inteiro.')
+    //       }
 
-          return true
-        },
-      },
-    },
-    'repetition_rule.days_of_week': {
-      custom: {
-        options: (value, { req }) => {
-          if ((req.body.repetition_rule.repeat_type == 'ALL_DAYS' && !value) || (req.body.repetition_rule.days_of_week.length <= 0)) {
-            throw new Error('O valor days_of_week é obrigatório.')
-          }
+    //       return true
+    //     },
+    //   },
+    // },
+    // 'repetition_rule.days_of_week': {
+    //   custom: {
+    //     options: (value, { req }) => {
+    //       if ((req.body.repetition_rule.repeat_type == 'ALL_DAYS' && !value) || (req.body.repetition_rule.days_of_week.length <= 0)) {
+    //         throw new Error('O valor days_of_week é obrigatório.')
+    //       }
 
-          return true
-        },
-      },
-      isIn: {
-        options: [[1, 2, 3, 4, 5, 6, 7]],
-        errorMessage: 'O valor informado é invalido, os valores validos são: 1, 2, 3, 4, 5, 6, 7.'
-      }
-    },
+    //       return true
+    //     },
+    //   },
+    //   isIn: {
+    //     options: [[1, 2, 3, 4, 5, 6, 7]],
+    //     errorMessage: 'O valor informado é invalido, os valores validos são: 1, 2, 3, 4, 5, 6, 7.'
+    //   }
+    // },
     'filter': {
       custom: {
         options: (value, { req }) => {
