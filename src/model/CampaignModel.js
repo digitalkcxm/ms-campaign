@@ -18,8 +18,7 @@ export default class CampaignModel {
 
       return result[0].count
     } catch (err) {
-      console.log('🚀 ~ CampaignModel ~ count ~ err:', err)
-      // throw new ErrorHelper('CampaignModel', 'count', 'An error occurred when trying counting campaign.', { }, err)
+      throw new ErrorHelper('CampaignModel', 'count', 'An error occurred when trying counting campaign.', { }, err)
     }
   }
 
