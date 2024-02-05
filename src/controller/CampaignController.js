@@ -12,11 +12,20 @@ export default class CampaignController {
     this.campaignVersionController = new CampaignVersionController(database)
   }
 
-  async getAll(company) {
+  async getAll(company, search, searchStatus, limit, offset) {
     try {
-      const result = await this.campaignModel.getAll(company.id)
-      return result.map(item => {
+      const searchStatusID = []
 
+      if(searchStatus) {
+        for (const item of searchStatus) {
+          const id = status[item.toLowerCase()]
+          id && searchStatusID.push(id)
+        }
+      }
+
+      const result = await this.campaignModel.getAll(company.id, search, searchStatusID, limit, offset)
+
+      return result.map(item => {
         item.created_at = moment(item.created_at).format('DD/MM/YYYY HH:mm:ss')
         item.start_date = moment(item.start_date).format('DD/MM/YYYY HH:mm:ss')
         item.status = statusByID[item.status]
