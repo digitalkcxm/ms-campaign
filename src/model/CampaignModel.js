@@ -40,6 +40,7 @@ export default class CampaignModel {
         .select({
           id: 'campaign.id',
           name: 'campaign.name',
+          id_workflow: 'campaign.id_workflow',
           repetition_rule: 'campaign_version.repetition_rule',
           created_by: 'campaign.created_by',
           created_at: 'campaign.created_at',
@@ -69,6 +70,19 @@ export default class CampaignModel {
       return result[0]
     } catch (err) {
       throw new ErrorHelper('CampaignModel', 'create', 'An error occurred when trying create campaign.', { obj }, err)
+    }
+  }
+
+  async update(id, obj) {
+    try {
+      const result = await this.database('campaign')
+        .returning(['id', 'id_company', 'id_workflow', 'id_status', 'id_tenant', 'name', 'created_at', 'draft', 'active', 'created_at', 'updated_at'])
+        .update(obj)
+        .where({ id })
+
+      return result[0]
+    } catch (err) {
+      throw new ErrorHelper('CampaignModel', 'update', 'An error occurred when trying update campaign.', { obj }, err)
     }
   }
 }

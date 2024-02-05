@@ -84,5 +84,35 @@ export default class CampaignController {
     }
   }
 
-  async update() {}
+  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter) {
+    try {
+      const newCampaign = {}
+
+      newCampaign.id_workflow = await this.workflowController.getIDWorkflow(company.id, id_workflow)
+      newCampaign.id_status = draft ? status.draft : status.scheduled
+      newCampaign.name = name
+      newCampaign.edited_by = edited_by
+      newCampaign.draft = draft
+      newCampaign.active = active
+      newCampaign.updated_at = moment().format()
+
+      const updateCampaign = await this.campaignModel.update(id, newCampaign)
+
+      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, true, start_date, repetition_rule, filter)
+
+      return {
+        id: updateCampaign.id,
+        name: updateCampaign.name,
+        repetition_rule: createVersion.repetition_rule,
+        create_by: updateCampaign.create_by,
+        created_at: moment(updateCampaign.created_at).format('DD/MM/YYYY HH:mm:ss'),
+        start_date: moment(createVersion.start_date).format('DD/MM/YYYY HH:mm:ss'),
+        status: statusByID[updateCampaign.id_status],
+        total_registrations: 0,
+        active: updateCampaign.active
+      }
+    } catch (err) {
+      throw new ErrorHelper('CampaignController', 'Update', 'An error occurred when trying updating campaign.', { company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter }, err)
+    }
+  }
 }
