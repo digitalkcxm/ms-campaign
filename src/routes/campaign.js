@@ -57,11 +57,11 @@ export default (database, logger, redis) => {
 
   router.put('/:id', checkSchema(update), applyRules, async (req, res, next) => {
     try {
-      // const { name, description, type, config, flow, active, workflow_id } = req.body
+      const { name, id_workflow, repetition_rule, edited_by, created_at, start_date, draft, active, filter } = req.body
 
-      // const result = await automationController.update(req.company, req.params.id, name, description, type, config, flow, active, XTenantID, workflow_id, created_by)
+      const result = await campaignController.update(req.company, req.params.id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter)
 
-      return res.status(200).json(req.body)
+      return res.status(200).json(result)
     } catch (err) {
       next(new Error(err))
     }

@@ -11,6 +11,8 @@ export default class CampaignVersionController {
   async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter) {
     const campaignVersion = {}
     try {
+      await this.campaignVersionModel.update(id_campaign, created_by)
+
       campaignVersion.id_company = id_company
       campaignVersion.id_workflow = id_workflow
       campaignVersion.id_campaign = id_campaign

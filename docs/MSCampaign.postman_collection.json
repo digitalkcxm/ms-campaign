@@ -60,7 +60,7 @@
 					}
 				],
 				"url": {
-					"raw": "{{URLBase}}/campaign?search=campanha&status=scheduled",
+					"raw": "{{URLBase}}/campaign?search=core&status=[\"draft\"]&limit=50&offset=0",
 					"host": [
 						"{{URLBase}}"
 					],
@@ -70,11 +70,20 @@
 					"query": [
 						{
 							"key": "search",
-							"value": "campanha"
+							"value": "core"
 						},
 						{
 							"key": "status",
-							"value": "scheduled"
+							"value": "[\"draft\"]",
+							"description": "[\"draft\", \"scheduled\", \"running\", \"canceled\", \"error\", \"finished\"]"
+						},
+						{
+							"key": "limit",
+							"value": "50"
+						},
+						{
+							"key": "offset",
+							"value": "0"
 						}
 					]
 				}
@@ -128,7 +137,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\n    \"id\": \"e576d3e8-f24d-4b81-a038-c4a37bbb9658\",\n    \"name\": \"Campanha 1\",\n    \"repetition_rule\": {\n        \"repeat_type\": \"ALL_DAYS\",\n        \"days_of_week\": [\n            1\n        ],\n        \"repeat_until\": \"2024-08-04\"\n    },\n    \"created_by\": 2,\n    \"created_at\": \"04/02/2024 16:38:30\",\n    \"start_date\": \"04/02/2024 16:38:30\",\n    \"status\": \"scheduled\",\n    \"active\": true,\n    \"filter\": [\n        {\n            \"rules\": [\n                {\n                    \"value\": [\n                        \"cargo1\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": [\n                        \"cargo2\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": \"Luiz\",\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.nome\"\n                }\n            ],\n            \"operator\": \"OR\"\n        }\n    ]\n}",
+					"raw": "{\n    \"name\": \"Campanha 101\",\n    \"id_workflow\": \"8af52c34-2f65-49ac-95f5-85ba7f95f7fb\",\n    \"repetition_rule\": {\n        \"repeat_type\": \"ALL_DAYS\",\n        \"days_of_week\": [\n            1\n        ],\n        \"repeat_until\": \"2024-08-04\"\n    },\n    \"edited_by\": 2,\n    \"start_date\": \"2024-02-04 16:38:30\",\n    \"draft\": false,\n    \"active\": true,\n    \"filter\": [\n        {\n            \"rules\": [\n                {\n                    \"value\": [\n                        \"cargo1\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                },\n                {\n                    \"value\": [\n                        \"cargo2\"\n                    ],\n                    \"operator\": \"EQUAL\",\n                    \"variable\": \"crm.cliente.cargos\"\n                }\n            ],\n            \"operator\": \"OR\"\n        }\n    ]\n}",
 					"options": {
 						"raw": {
 							"language": "json"
