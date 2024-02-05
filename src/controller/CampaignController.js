@@ -12,9 +12,11 @@ export default class CampaignController {
     this.campaignVersionController = new CampaignVersionController(database)
   }
 
-  async getAll(company, search, searchStatus, limit, offset) {
+  async getAll(company, search, searchStatus, size = 50, page = 0) {
     try {
+      const obj = {}
       const searchStatusID = []
+      const offset = page <= 0 ? 0 : size * page
 
       if(searchStatus) {
         for (const item of searchStatus) {
@@ -23,9 +25,10 @@ export default class CampaignController {
         }
       }
 
-      const result = await this.campaignModel.getAll(company.id, search, searchStatusID, limit, offset)
+      const resultData = await this.campaignModel.getAll(company.id, search, searchStatusID, size, offset)
+      const count = await this.campaignModel.count(company.id, search, searchStatusID)
 
-      return result.map(item => {
+      obj.data = resultData.map(item => {
         item.created_at = moment(item.created_at).format('DD/MM/YYYY HH:mm:ss')
         item.start_date = moment(item.start_date).format('DD/MM/YYYY HH:mm:ss')
         item.status = statusByID[item.status]
@@ -33,6 +36,17 @@ export default class CampaignController {
 
         return item
       })
+
+
+      obj.pagination = {
+        last_page: parseInt(count) < parseInt(size) ? 0 : (Math.floor(parseInt(count) / parseInt(size))),
+        first_page: 0,
+        current_page: parseInt(page),
+        page_size: parseInt(size),
+        total_rows: parseInt(count)
+      }
+
+      return obj
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'getAll', 'An error occurred when trying get campaign.', { company }, err)
     }
@@ -71,8 +85,8 @@ export default class CampaignController {
       return {
         id: createCampaign.id,
         name: createCampaign.name,
-        repetition_rule: createVersion.repetition_rule,
-        create_by: createCampaign.create_by,
+        repeat: createVersion.repeat,
+        created_by: createCampaign.created_by,
         created_at: moment(createCampaign.created_at).format('DD/MM/YYYY HH:mm:ss'),
         start_date: moment(createVersion.start_date).format('DD/MM/YYYY HH:mm:ss'),
         status: statusByID[createCampaign.id_status],
@@ -84,7 +98,7 @@ export default class CampaignController {
     }
   }
 
-  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter) {
+  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter) {
     try {
       const newCampaign = {}
 
@@ -98,13 +112,13 @@ export default class CampaignController {
 
       const updateCampaign = await this.campaignModel.update(id, newCampaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, true, start_date, repetition_rule, filter)
+      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter)
 
       return {
         id: updateCampaign.id,
         name: updateCampaign.name,
-        repetition_rule: createVersion.repetition_rule,
-        create_by: updateCampaign.create_by,
+        repeat: createVersion.repeat,
+        created_by: updateCampaign.created_by,
         created_at: moment(updateCampaign.created_at).format('DD/MM/YYYY HH:mm:ss'),
         start_date: moment(createVersion.start_date).format('DD/MM/YYYY HH:mm:ss'),
         status: statusByID[updateCampaign.id_status],

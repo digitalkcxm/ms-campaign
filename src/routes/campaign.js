@@ -17,10 +17,10 @@ export default (database, logger, redis) => {
 
   router.get('/', async (req, res, next) => {
     try {
-      let { search, status, limit, offset } = req.query
+      let { search, status, size, page } = req.query
       if(status) status = JSON.parse(status)
 
-      const result = await campaignController.getAll(req.company, search, status, limit, offset)
+      const result = await campaignController.getAll(req.company, search, status, size, page)
 
       return res.status(200).json(result)
     } catch (err) {
@@ -57,9 +57,9 @@ export default (database, logger, redis) => {
 
   router.put('/:id', checkSchema(update), applyRules, async (req, res, next) => {
     try {
-      const { name, id_workflow, repetition_rule, edited_by, created_at, start_date, draft, active, filter } = req.body
+      const { name, id_workflow, repetition_rule, edited_by, created_at, start_date, draft, repeat, active, filter } = req.body
 
-      const result = await campaignController.update(req.company, req.params.id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter)
+      const result = await campaignController.update(req.company, req.params.id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter)
 
       return res.status(200).json(result)
     } catch (err) {
