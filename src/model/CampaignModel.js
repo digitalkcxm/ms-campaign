@@ -33,7 +33,8 @@ export default class CampaignModel {
           created_at: 'campaign.created_at',
           start_date: 'campaign_version.start_date',
           status: 'campaign.id_status',
-          active: 'campaign.active'
+          active: 'campaign.active',
+          total: 'campaign.total'
         })
         .innerJoin('campaign_version', 'campaign_version.id_campaign', 'campaign.id')
         .innerJoin('company', 'company.id', 'campaign.id_company')

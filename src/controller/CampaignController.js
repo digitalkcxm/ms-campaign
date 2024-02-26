@@ -35,7 +35,7 @@ export default class CampaignController {
         item.created_at = moment(item.created_at).format('DD/MM/YYYY HH:mm:ss')
         item.start_date = moment(item.start_date).format('DD/MM/YYYY HH:mm:ss')
         item.status = statusByID[item.status]
-        item.total_registrations = 0
+        item.total_registrations = item.total
 
         return item
       })
@@ -96,7 +96,7 @@ export default class CampaignController {
         status: statusByID[createCampaign.id_status],
         total_registrations: 0,
         active: createCampaign.active,
-        end_date: createVersion.end_date,
+        end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
         id_phase: createVersion.id_phase
       }
     } catch (err) {
@@ -130,7 +130,7 @@ export default class CampaignController {
         status: statusByID[updateCampaign.id_status],
         total_registrations: 0,
         active: updateCampaign.active,
-        end_date: createVersion.end_date,
+        end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
         id_phase: createVersion.id_phase
       }
     } catch (err) {
@@ -173,6 +173,7 @@ export default class CampaignController {
         return true
       }
 
+      this.campaignModel.update(campaign_id, { total: getLeads.length }),
       await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date)
 
       return true
