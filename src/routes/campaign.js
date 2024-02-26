@@ -35,6 +35,9 @@ export default (database, logger, redis) => {
 
       const result = await campaignController.getByID(req.company, req.params.id)
 
+      delete result.id_tenant
+      delete result.campaign_version_id
+
       return res.status(200).json(result)
     } catch (err) {
       next(new Error(err))
@@ -45,9 +48,9 @@ export default (database, logger, redis) => {
     try {
       const XTenantID = req.headers['x-tenant-id']
 
-      const { name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter } = req.body
+      const { name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase } = req.body
 
-      const result = await campaignController.create(req.company, XTenantID, name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter)
+      const result = await campaignController.create(req.company, XTenantID, name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
 
       return res.status(201).json(result)
     } catch (err) {
@@ -57,9 +60,9 @@ export default (database, logger, redis) => {
 
   router.put('/:id', checkSchema(update), applyRules, async (req, res, next) => {
     try {
-      const { name, id_workflow, repetition_rule, edited_by, created_at, start_date, draft, repeat, active, filter } = req.body
+      const { name, id_workflow, repetition_rule, edited_by, created_at, start_date, draft, repeat, active, filter, end_date, id_phase } = req.body
 
-      const result = await campaignController.update(req.company, req.params.id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter)
+      const result = await campaignController.update(req.company, req.params.id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase)
 
       return res.status(200).json(result)
     } catch (err) {

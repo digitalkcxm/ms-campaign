@@ -23,4 +23,5 @@ export default class AppVariables {
   static APMServerURL() { return global._variables['APM_SERVER_URL'] }
   static APPEnvironment() { return global._variables['APP_ENVIRONMENT'] }
   static MSCRMManager() { return global._variables['MSCRMMANAGER'] }
+  static MSWorkflow() { return global._variables['MSWORKFLOW'] }
 }

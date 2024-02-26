@@ -63,6 +63,8 @@ export default class CampaignModel {
           id: 'campaign.id',
           name: 'campaign.name',
           id_workflow: 'workflow.id_workflow',
+          id_tenant: 'campaign.id_tenant',
+          campaign_version_id: 'campaign_version.id',
           repeat: 'campaign_version.repeat',
           repetition_rule: 'campaign_version.repetition_rule',
           created_by: 'campaign.created_by',
@@ -70,7 +72,9 @@ export default class CampaignModel {
           start_date: 'campaign_version.start_date',
           status: 'campaign.id_status',
           active: 'campaign.active',
-          filter: 'campaign_version.filter'
+          filter: 'campaign_version.filter',
+          end_date: 'campaign_version.end_date',
+          id_phase: 'campaign_version.id_phase'
         })
         .innerJoin('campaign_version', 'campaign_version.id_campaign', 'campaign.id')
         .innerJoin('company', 'company.id', 'campaign.id_company')

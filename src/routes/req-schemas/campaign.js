@@ -91,8 +91,10 @@ const create = (() => {
           for (const filter of req.body.filter) {
             if(filter.rules.length <= 0) continue
 
-            const resultOperator = ['or', 'and'].filter(operator => { if(operator == filter.operator.toLowerCase()) return operator })
-            if(resultOperator.length <= 0) throw new Error('O valor informado é invalido, os valores validos são: or, and.')
+            if(filter.operator) {
+              const resultOperator = ['or', 'and'].filter(operator => { if(operator == filter.operator.toLowerCase()) return operator })
+              if(resultOperator.length <= 0) throw new Error('O valor informado é invalido, os valores validos são: or, and.')
+            }
 
             for (const rule of filter.rules) {
               if (!rule.value || rule.value.length <= 0) throw new Error('value é obrigatório.')

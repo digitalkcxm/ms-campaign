@@ -27,5 +27,13 @@ export default class CompanyModel {
       throw new ErrorHelper('CompanyModel', 'DBError', 'An error occurred when trying to create company.', {token }, err)
     }
   }
+
+  async getByID(id) {
+    try {
+      return await this.database('company').where({ id })
+    } catch (err) {
+      throw new ErrorHelper('CompanyModel', 'DBError', 'An error occurred when trying to get company by id.', { id }, err)
+    }
+  }
 }
 
