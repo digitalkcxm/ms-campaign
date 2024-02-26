@@ -30,10 +30,10 @@ export default class CampaignVersionController {
       campaignVersion.created_by = created_by
       campaignVersion.draft = draft
       campaignVersion.repeat = repeat
-      campaignVersion.start_date = start_date || moment().format()
+      campaignVersion.start_date = start_date ? moment(new Date(start_date)).format() : moment().format()
       campaignVersion.repetition_rule = JSON.stringify(repetition_rule)
       campaignVersion.filter = JSON.stringify(filter)
-      campaignVersion.end_date = end_date
+      campaignVersion.end_date = end_date ? moment(new Date(end_date)).format() : null
       campaignVersion.id_phase = id_phase
 
       const result = await this.campaignVersionModel.create(campaignVersion)

@@ -1,5 +1,6 @@
 import helmet from 'helmet'
 import express from 'express'
+import moment from 'moment-timezone'
 import bodyParser from 'body-parser'
 import compression from 'compression'
 
@@ -18,6 +19,8 @@ AppVariables.loadConfig()
 const app = express()
 const redis = AppVariables.stateEnv() !== 'testing' ? Redis.newConnection() : ''
 const connRabbit = AppVariables.stateEnv() !== 'testing' ? await rabbitmq.newConnection() : ''
+
+moment.tz.setDefault('America/Sao_Paulo')
 
 app.use(bodyParser.json({ limit: '5mb' }))
 cors(app)
