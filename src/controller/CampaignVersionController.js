@@ -1,14 +1,24 @@
 import moment from 'moment'
 import { status } from '../model/Enumarations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
+import RabbitMQService from '../service/RabbitMQService.js'
 import CampaignVersionModel from '../model/CampaignVersionModel.js'
 
 export default class CampaignVersionController {
-  constructor(database = {}) {
+  constructor(database = {}, logger = {}) {
+    this.logger = logger
     this.campaignVersionModel = new CampaignVersionModel(database)
   }
 
-  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter) {
+  async getByID(id) {
+    try {
+      return await this.campaignVersionModel.getByID(id)
+    } catch (err) {
+      console.log('🚀 ~ CampaignVersionController ~ getByID ~ err:', err)
+    }
+  }
+
+  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
     const campaignVersion = {}
     try {
       await this.campaignVersionModel.update(id_campaign, created_by)
@@ -23,10 +33,40 @@ export default class CampaignVersionController {
       campaignVersion.start_date = start_date || moment().format()
       campaignVersion.repetition_rule = JSON.stringify(repetition_rule)
       campaignVersion.filter = JSON.stringify(filter)
+      campaignVersion.end_date = end_date
+      campaignVersion.id_phase = id_phase
 
-      return await this.campaignVersionModel.create(campaignVersion)
+      const result = await this.campaignVersionModel.create(campaignVersion)
+
+      await this.#scheduler(result.id_company, result.id_campaign, result.id, campaignVersion.start_date)
+
+      return result
     } catch (err) {
       throw new ErrorHelper('CampaignVersionController', 'Create', 'An error occurred when trying creating campaign version.', { id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter }, err)
+    }
+  }
+
+  async updateStatus(id, id_status) {
+    try {
+      return await this.campaignVersionModel.updateStatus(id, id_status)
+    } catch (err) {
+      console.log('🚀 ~ CampaignVersionController ~ update ~ err:', err)
+    }
+  }
+
+  async #scheduler(company_id, campaign_id, campaign_version_id, scheduled_date) {
+    try {
+      const now = moment()
+      const scheduledDate = moment(scheduled_date)
+
+      const schedulerInMilliseconds = scheduledDate.diff(now)
+
+      const result = await RabbitMQService.sendToExchangeQueueDelayed('scheduling_campaign', 'scheduling_campaign', { company_id, campaign_id, campaign_version_id }, schedulerInMilliseconds)
+      this.logger.info(result)
+
+      return true
+    } catch (err) {
+      throw new ErrorHelper('ActionController', '#scheduler', 'A scheduler error has occurred.', { company_id, campaign_id, campaign_version_id, scheduled_date }, err)
     }
   }
 }

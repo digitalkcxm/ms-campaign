@@ -4,12 +4,15 @@ import ErrorHelper from '../helper/ErrorHelper.js'
 import CampaignModel from '../model/CampaignModel.js'
 import WorkflowController from './WorkflowController.js'
 import CampaignVersionController from './CampaignVersionController.js'
+import CRMManagerService from '../service/CRMMangerService.js'
+import CompanyModel from '../model/CompanyModel.js'
 
 export default class CampaignController {
-  constructor(database = {}) {
+  constructor(database = {}, logger = {}) {
+    this.companyModel = new CompanyModel(database)
     this.campaignModel = new CampaignModel(database)
-    this.workflowController = new WorkflowController(database)
-    this.campaignVersionController = new CampaignVersionController(database)
+    this.workflowController = new WorkflowController(database, logger)
+    this.campaignVersionController = new CampaignVersionController(database, logger)
   }
 
   async getAll(company, search, searchStatus, size = 50, page = 0) {
@@ -59,6 +62,7 @@ export default class CampaignController {
 
       result[0].created_at = moment(result[0].created_at).format('DD/MM/YYYY HH:mm:ss')
       result[0].start_date = moment(result[0].start_date).format('DD/MM/YYYY HH:mm:ss')
+      result[0].end_date = result[0].end_date || result[0].end_date != null ? moment(result[0].end_date).format('DD/MM/YYYY HH:mm:ss') : ''
       result[0].status = statusByID[result[0].status]
 
       return result[0]
@@ -67,7 +71,7 @@ export default class CampaignController {
     }
   }
 
-  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter) {
+  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
     const campaign = {}
     try {
       campaign.id_company = company.id
@@ -80,7 +84,7 @@ export default class CampaignController {
 
       const createCampaign = await this.campaignModel.create(campaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter)
+      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
 
       return {
         id: createCampaign.id,
@@ -91,14 +95,16 @@ export default class CampaignController {
         start_date: moment(createVersion.start_date).format('DD/MM/YYYY HH:mm:ss'),
         status: statusByID[createCampaign.id_status],
         total_registrations: 0,
-        active: createCampaign.active
+        active: createCampaign.active,
+        end_date: createVersion.end_date,
+        id_phase: createVersion.id_phase
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Create', 'An error occurred when trying creating campaign.', { company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter }, err)
     }
   }
 
-  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter) {
+  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase) {
     try {
       const newCampaign = {}
 
@@ -112,7 +118,7 @@ export default class CampaignController {
 
       const updateCampaign = await this.campaignModel.update(id, newCampaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter)
+      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
 
       return {
         id: updateCampaign.id,
@@ -123,10 +129,71 @@ export default class CampaignController {
         start_date: moment(createVersion.start_date).format('DD/MM/YYYY HH:mm:ss'),
         status: statusByID[updateCampaign.id_status],
         total_registrations: 0,
-        active: updateCampaign.active
+        active: updateCampaign.active,
+        end_date: createVersion.end_date,
+        id_phase: createVersion.id_phase
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Update', 'An error occurred when trying updating campaign.', { company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter }, err)
+    }
+  }
+
+  async executeCampaign(company_id, campaign_id, campaign_version_id) {
+    try {
+      const checkCampaign = await this.campaignModel.getByID(company_id, campaign_id)
+      if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
+
+      const consult = await Promise.all([
+        this.campaignModel.update(campaign_id, { id_status: status.running }),
+        this.getByID({ id: company_id }, campaign_id),
+        this.companyModel.getByID(company_id),
+        this.campaignVersionController.updateStatus(campaign_version_id, status.running)
+      ])
+
+      const getByID = consult[1]
+      const getCompany = consult[2]
+
+      if (getByID.campaign_version_id != campaign_version_id) return true
+
+      const getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+
+      if(getLeads && getLeads.error) {
+        await Promise.all([
+          this.campaignModel.update(campaign_id, { id_status: status.error }),
+          this.campaignVersionController.updateStatus(campaign_version_id, status.error)
+        ])
+        return false
+      }
+
+      if(!getLeads || getLeads == null || getLeads.length <= 0) {
+        await Promise.all([
+          this.campaignModel.update(campaign_id, { id_status: status.finished }),
+          this.campaignVersionController.updateStatus(campaign_version_id, status.finished)
+        ])
+        return true
+      }
+
+      await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date)
+
+      return true
+    } catch (err) {
+      console.log('Error => ', err)
+      return false
+    }
+  }
+
+  async updateStatusCampaign(company, campaign_id, campaign_version_id, id_status) {
+    try {
+      const getCompany = await this.companyModel.getByToken(company)
+      const checkCampaign = await this.campaignModel.getByID(getCompany[0].id, campaign_id)
+      if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
+
+      return await Promise.all([
+        this.campaignModel.update(campaign_id, { id_status }),
+        this.campaignVersionController.updateStatus(campaign_version_id, id_status)
+      ])
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ updateStatusCampaign ~ err:', err)
     }
   }
 }
