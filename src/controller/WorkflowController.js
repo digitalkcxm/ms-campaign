@@ -29,7 +29,7 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
 
@@ -40,6 +40,7 @@ export default class WorkflowController {
         name: lead.nome,
         id_campaign,
         id_campaign_version,
+        id_workflow,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -63,7 +64,7 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, crm) {
+  async createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
@@ -74,7 +75,7 @@ export default class WorkflowController {
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 
       if(end_date) {
-        console.log('CRIAR EXP DATA')
+        this.workflowService.setSLA(company, createTicket.id, id_workflow, checkCampaign.end_date)
       }
 
       RabbitMQService.sendToExchangeQueue(`automation:events:${getDetailsCompany.name}`, `automation:events:${getDetailsCompany.name}`, {

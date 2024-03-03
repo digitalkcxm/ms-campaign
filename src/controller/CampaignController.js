@@ -174,7 +174,7 @@ export default class CampaignController {
       }
 
       this.campaignModel.update(campaign_id, { total: getLeads.length }),
-      await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date)
+      await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow)
 
       return true
     } catch (err) {

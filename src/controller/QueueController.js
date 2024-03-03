@@ -77,9 +77,9 @@ export default class QueueController {
         if(result.type == 'update_status_campaign') {
           process = await this.campaignController.updateStatusCampaign(result.company, result.id_campaign, result.id_campaign_version, result.status)
         }else {
-          const { company, id_phase, end_date, name, id_campaign, id_campaign_version, crm } = result
+          const { company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm } = result
 
-          process = await this.workflowController.createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, crm)
+          process = await this.workflowController.createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm)
         }
 
         if (!process) {
