@@ -20,7 +20,7 @@ export default class CRMManagerService {
             LESS_THAN: '<'
           }
 
-          obj.value = String(rule.value)
+          obj.value = typeof rule.value != 'object' ? String(rule.value) : JSON.stringify(rule.value)
           obj.operator = operators[rule.operator.toUpperCase()]
           obj.table = searchInfo[1]
           obj.column = searchInfo[2]

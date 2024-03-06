@@ -100,7 +100,7 @@ const create = (() => {
               if (!rule.value || rule.value.length <= 0) throw new Error('value é obrigatório.')
               if (!rule.variable || rule.variable.length <= 0) throw new Error('variable é obrigatório.')
               if (!rule.operator || rule.operator.length <= 0) throw new Error('operator é obrigatório.')
-              const conditionOperators = ['DIFFERENT', 'EQUAL', 'GREATER_THAN', 'LESS_THAN'].filter(operator => { if(operator.toLowerCase() == rule.operator.toLowerCase()) return operator})
+              const conditionOperators = ['DIFFERENT', 'EQUAL', 'GREATER_THAN', 'LESS_THAN', 'IN', 'NOT_IN'].filter(operator => { if(operator.toLowerCase() == rule.operator.toLowerCase()) return operator})
               if(conditionOperators.length <= 0) throw new Error('O valor informado é invalido, os valores validos são: DIFFERENT, EQUAL, GREATER_THAN, LESS_THAN.')
             }
           }
