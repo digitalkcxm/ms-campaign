@@ -18,8 +18,10 @@ export default class CampaignVersionController {
     }
   }
 
-  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
+  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
+
     const campaignVersion = {}
+
     try {
       await this.campaignVersionModel.update(id_campaign, created_by)
 
@@ -35,6 +37,9 @@ export default class CampaignVersionController {
       campaignVersion.filter = JSON.stringify(filter)
       campaignVersion.end_date = end_date ? moment(new Date(end_date)).format() : null
       campaignVersion.id_phase = id_phase
+      campaignVersion.ignore_open_tickets = ignore_open_tickets
+      campaignVersion.first_message = JSON.stringify(first_message)
+      campaignVersion.negotiation = JSON.stringify(negotiation)
 
       const result = await this.campaignVersionModel.create(campaignVersion)
 
