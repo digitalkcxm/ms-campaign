@@ -75,7 +75,10 @@ export default class CampaignModel {
           active: 'campaign.active',
           filter: 'campaign_version.filter',
           end_date: 'campaign_version.end_date',
-          id_phase: 'campaign_version.id_phase'
+          id_phase: 'campaign_version.id_phase',
+          ignore_open_tickets: 'campaign_version.ignore_open_tickets',
+          first_message: 'campaign_version.first_message',
+          negotiation: 'campaign_version.negotiation'
         })
         .innerJoin('campaign_version', 'campaign_version.id_campaign', 'campaign.id')
         .innerJoin('company', 'company.id', 'campaign.id_company')

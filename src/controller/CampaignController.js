@@ -71,7 +71,7 @@ export default class CampaignController {
     }
   }
 
-  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
+  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
     const campaign = {}
     try {
       campaign.id_company = company.id
@@ -84,7 +84,7 @@ export default class CampaignController {
 
       const createCampaign = await this.campaignModel.create(campaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
+      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
 
       return {
         id: createCampaign.id,
@@ -97,14 +97,17 @@ export default class CampaignController {
         total_registrations: 0,
         active: createCampaign.active,
         end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
-        id_phase: createVersion.id_phase
+        id_phase: createVersion.id_phase,
+        ignore_open_tickets: createVersion.ignore_open_tickets,
+        first_message: createVersion.first_message,
+        negotiation: createVersion.negotiation
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Create', 'An error occurred when trying creating campaign.', { company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter }, err)
     }
   }
 
-  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase) {
+  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
     try {
       const newCampaign = {}
 
@@ -118,7 +121,7 @@ export default class CampaignController {
 
       const updateCampaign = await this.campaignModel.update(id, newCampaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
+      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
 
       return {
         id: updateCampaign.id,
@@ -131,7 +134,10 @@ export default class CampaignController {
         total_registrations: 0,
         active: updateCampaign.active,
         end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
-        id_phase: createVersion.id_phase
+        id_phase: createVersion.id_phase,
+        ignore_open_tickets: createVersion.ignore_open_tickets,
+        first_message: createVersion.first_message,
+        negotiation: createVersion.negotiation
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Update', 'An error occurred when trying updating campaign.', { company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter }, err)
