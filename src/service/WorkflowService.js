@@ -68,12 +68,27 @@ export default class WorkflowService {
           Authorization,
           'Content-Type': 'application/json'
         },
-        data : {
+        data: {
           id_ticket,
           id_workflow,
           limit_interaction: String(moment(limit_interaction).add(3, 'hours').format()),
           id_user: '0'
         }
+      })
+
+      return result.data
+    } catch (err) {
+      return err.response.data
+    }
+  }
+
+  async checkOpenTickets(Authorization, id_crm) {
+    try {
+      const result = await axios.request({
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${AppVariables.MSWorkflow()}/api/v1/customer/linked_tickets?id_crm=${id_crm}`,
+        headers: { Authorization }
       })
 
       return result.data
