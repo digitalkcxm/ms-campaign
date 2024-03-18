@@ -29,7 +29,7 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, first_message, negotiation) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
 
@@ -41,6 +41,9 @@ export default class WorkflowController {
         id_campaign,
         id_campaign_version,
         id_workflow,
+        ignore_open_tickets,
+        first_message,
+        negotiation,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -64,12 +67,18 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm) {
+  async createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, first_message, negotiation) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
 
       const getDetailsCompany = await this.companyService.getBytoken(company)
+
+      if(ignore_open_tickets) {
+        const checkOpenTickets = await this.#checkOpenTickets(company, crm.id_crm)
+        if(checkOpenTickets) return true
+      }
+
       const createTicket = await this.workflowService.createTicket(company, name, id_phase)
 
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
@@ -86,6 +95,17 @@ export default class WorkflowController {
       return true
     } catch (err) {
       console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', err)
+    }
+  }
+
+  async #checkOpenTickets(company, id_crm) {
+    try {
+      const checkOpenTickets = await this.workflowService.checkOpenTickets(company, id_crm)
+      if(!checkOpenTickets || checkOpenTickets.length <= 0) return false
+
+      return checkOpenTickets.filter(ticket => ticket.open).length > 0
+    } catch (err) {
+      console.log('🚀 ~ WorkflowController ~ checkOpenTickets ~ err:', err)
     }
   }
 }

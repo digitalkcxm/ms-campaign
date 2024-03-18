@@ -163,7 +163,7 @@ export default class CampaignController {
 
       const getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
 
-      if(getLeads && getLeads.error) {
+      if(getLeads?.error) {
         await Promise.all([
           this.campaignModel.update(campaign_id, { id_status: status.error }),
           this.campaignVersionController.updateStatus(campaign_version_id, status.error)
@@ -179,8 +179,8 @@ export default class CampaignController {
         return true
       }
 
-      this.campaignModel.update(campaign_id, { total: getLeads.length }),
-      await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow)
+      this.campaignModel.update(campaign_id, { total: getLeads.length })
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, getByID.first_message, getByID.negotiation)
 
       return true
     } catch (err) {
