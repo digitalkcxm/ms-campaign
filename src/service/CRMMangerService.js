@@ -74,4 +74,94 @@ export default class CRMManagerService {
       }
     }
   }
+
+  static async getPrincipalTemplateByBusiness(company, tenantID) {
+    try {
+      const result = await axios.request({
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${AppVariables.MSCRMManager()}/api/v1/templates/scope/business/principal`,
+        headers: {
+          token: company,
+          'x-tenant-id': tenantID
+        }
+      })
+
+      return result.data
+    } catch (err) {
+      return {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      }
+    }
+  }
+
+  static async getAllTables(company, tenantID) {
+    try {
+      const result = await axios.request({
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${AppVariables.MSCRMManager()}/api/v1/tables/`,
+        headers: {
+          token: company,
+          'x-tenant-id': tenantID
+        }
+      })
+
+      return result.data
+    } catch (err) {
+      return {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      }
+    }
+  }
+
+  static async getTemplateByID(company, tenantID, templateID) {
+    try {
+      const result = await axios.request({
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${AppVariables.MSCRMManager()}/api/v1/templates/${templateID}`,
+        headers: {
+          token: company,
+          'x-tenant-id': tenantID
+        }
+      })
+
+      return result.data
+    } catch (err) {
+      return {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      }
+    }
+  }
+
+  static async createSingleJSON(token, tenant_id, data) {
+    try {
+      const result = await axios.request({
+        method: 'post',
+        maxBodyLength: Infinity,
+        url: `${AppVariables.MSCRMManager()}/api/v1/data_import/single/json`,
+        headers: {
+          token,
+          'x-tenant-id': tenant_id,
+          'Content-Type': 'application/json'
+        },
+        data
+      })
+
+      return result.data
+    } catch (err) {
+      return {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      }
+    }
+  }
 }
