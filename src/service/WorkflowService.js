@@ -44,14 +44,6 @@ export default class WorkflowService {
         }
       })
 
-      console.log({
-        id_ticket,
-        id_crm,
-        table,
-        column,
-        template
-      })
-
       return result.data
     } catch (err) {
       return err.response.data

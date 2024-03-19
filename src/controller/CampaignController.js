@@ -145,6 +145,8 @@ export default class CampaignController {
   }
 
   async executeCampaign(company_id, campaign_id, campaign_version_id) {
+    let negotiation = false
+
     try {
       const checkCampaign = await this.campaignModel.getByID(company_id, campaign_id)
       if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
@@ -179,8 +181,12 @@ export default class CampaignController {
         return true
       }
 
+      if(getByID.negotiation?.length > 0) {
+        negotiation = await this.#prepareBusiness(getCompany[0].token, getByID.id_tenant, getByID.negotiation)
+      }
+
       this.campaignModel.update(campaign_id, { total: getLeads.length })
-      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, getByID.first_message, getByID.negotiation)
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, getByID.first_message, negotiation)
 
       return true
     } catch (err) {
@@ -201,6 +207,68 @@ export default class CampaignController {
       ])
     } catch (err) {
       console.log('🚀 ~ CampaignController ~ updateStatusCampaign ~ err:', err)
+    }
+  }
+
+  async #prepareBusiness(company, tenantID, negotiation) {
+    const newNegotiation = {}
+
+    try {
+      const getData = await Promise.all([
+        CRMManagerService.getPrincipalTemplateByBusiness(company, tenantID),
+        CRMManagerService.getAllTables(company, tenantID)
+      ])
+
+      const principalTemplateBusiness = getData[0]
+      const allTables = getData[1]
+
+      newNegotiation.main = this.#prepareMainBusiness(principalTemplateBusiness)
+      newNegotiation.data = await this.#prepareForeignKey(company, tenantID, allTables, newNegotiation.main.name, negotiation)
+
+      return newNegotiation
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ prepareBusiness ~ err:', err)
+    }
+  }
+
+  #prepareMainBusiness(template) {
+    try {
+      const obj = {}
+
+      obj.template = template.id
+
+      const customer = template.fields.filter(item => item.column == 'idcliente' || item.column == 'id_cliente')
+      const ticket = template.fields.filter(item => item.column == 'idticket' || item.column == 'id_ticket')
+
+      obj.name = template.table
+      obj.id_cliente = customer.length > 0 ? customer[0].column : ''
+      obj.id_ticket = ticket.length > 0 ? ticket[0].column : ''
+
+      return obj
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareMainBusiness ~ err:', err)
+
+    }
+  }
+
+  async #prepareForeignKey(company, tenantID, allTables, table_target, negotiation) {
+    try {
+      return await Promise.all(negotiation.map(async item => {
+        const template = await CRMManagerService.getTemplateByID(company, tenantID, item.template)
+        const table = allTables.business.filter(table => table.table_name == template.table_name)
+
+        if(table.length <= 0) return item
+
+        const fk = table[0].relations.filter(relation => relation.table_target == table_target)
+
+        if(fk.length <= 0) return item
+
+        item.fk = fk[0].field
+
+        return item
+      }))
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareForeignKey ~ err:', err)
     }
   }
 }

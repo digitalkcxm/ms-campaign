@@ -35,6 +35,7 @@ export default class WorkflowController {
 
       await Promise.all(leads.map(lead => RabbitMQService.sendToExchangeQueue('campaign_create_ticket', 'campaign_create_ticket', {
         company,
+        tenantID,
         id_phase,
         end_date,
         name: lead.nome,
@@ -67,7 +68,7 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, first_message, negotiation) {
+  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, first_message, negotiation) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
@@ -82,6 +83,10 @@ export default class WorkflowController {
       const createTicket = await this.workflowService.createTicket(company, name, id_phase)
 
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
+
+      if(negotiation) {
+        this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
+      }
 
       if(end_date) {
         this.workflowService.setSLA(company, createTicket.id, id_workflow, checkCampaign.end_date)
@@ -106,6 +111,41 @@ export default class WorkflowController {
       return checkOpenTickets.filter(ticket => ticket.open).length > 0
     } catch (err) {
       console.log('🚀 ~ WorkflowController ~ checkOpenTickets ~ err:', err)
+    }
+  }
+
+  async #createNegotiation(company, tenantID, customerID, ticketID, negotiation) {
+    try {
+      const { main, data } = negotiation
+
+      const objMainNegotiation = {
+        template_id: main.template,
+        data: {},
+        created_by: 0
+      }
+
+      objMainNegotiation.data[main.id_cliente] = customerID
+      objMainNegotiation.data[main.id_ticket] = ticketID
+
+      const createMainNegotiation = await CRMManagerService.createSingleJSON(company, tenantID, objMainNegotiation)
+
+      if(data.length <= 0) return true
+
+      const createNegotiation = await Promise.all(data.map(async item => {
+        const obj = {
+          template_id: item.template,
+          data: item.values,
+          created_by: 0
+        }
+
+        if(item.fk) obj.data[item.fk] = createMainNegotiation.id
+
+        return await CRMManagerService.createSingleJSON(company, tenantID, obj)
+      }))
+
+      return { createMainNegotiation, createNegotiation }
+    } catch (err) {
+      console.log('🚀 ~ WorkflowController ~ createNegotiation ~ err:', err)
     }
   }
 }
