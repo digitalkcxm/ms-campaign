@@ -1,10 +1,11 @@
+import { status } from '../model/Enumarations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
 import WorkflowModel from '../model/WorkflowModel.js'
+import MessageController from './MessageController.js'
 import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
-import { status } from '../model/Enumarations.js'
-import CRMManagerService from '../service/CRMMangerService.js'
+import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
 
 export default class WorkflowController {
@@ -13,6 +14,7 @@ export default class WorkflowController {
     this.workflowModel = new WorkflowModel(database)
     this.workflowService = new WorkflowService(logger)
     this.campaignVersionController = new CampaignVersionController(database, logger)
+    this.messageController = new MessageController()
   }
 
   async getIDWorkflow(id_company, id_workflow) {
@@ -29,7 +31,7 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, first_message, negotiation) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
 
@@ -43,8 +45,8 @@ export default class WorkflowController {
         id_campaign_version,
         id_workflow,
         ignore_open_tickets,
-        first_message,
         negotiation,
+        message: lead.message,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -68,7 +70,7 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, first_message, negotiation) {
+  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
@@ -86,6 +88,10 @@ export default class WorkflowController {
 
       if(negotiation) {
         this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
+      }
+
+      if(message) {
+        this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
       }
 
       if(end_date) {

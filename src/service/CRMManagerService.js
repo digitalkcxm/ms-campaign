@@ -164,4 +164,28 @@ export default class CRMManagerService {
       }
     }
   }
+
+  static async getDataCRM(token, tenant_id, get_table, table, column, id_crm) {
+    try {
+      const result = await axios.request({
+        method: 'get',
+        maxBodyLength: Infinity,
+        url: `${process.env.MSCRMMANAGER}/api/v1/data/scope/business/${get_table}?table=${table}&${column}=${id_crm}&page=0&size=50`,
+        headers: {
+          token,
+          'x-tenant-id': tenant_id
+        }
+      })
+
+      if(result.data.data.length <= 0) return false
+
+      return result.data.data
+    } catch (err) {
+      return {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      }
+    }
+  }
 }

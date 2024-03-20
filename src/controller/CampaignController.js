@@ -1,11 +1,12 @@
 import moment from 'moment'
-import { status, statusByID } from '../model/Enumarations.js'
+
 import ErrorHelper from '../helper/ErrorHelper.js'
+import CompanyModel from '../model/CompanyModel.js'
 import CampaignModel from '../model/CampaignModel.js'
 import WorkflowController from './WorkflowController.js'
+import { status, statusByID } from '../model/Enumarations.js'
+import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
-import CRMManagerService from '../service/CRMMangerService.js'
-import CompanyModel from '../model/CompanyModel.js'
 
 export default class CampaignController {
   constructor(database = {}, logger = {}) {
@@ -163,7 +164,7 @@ export default class CampaignController {
 
       if (getByID.campaign_version_id != campaign_version_id) return true
 
-      const getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+      let getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
 
       if(getLeads?.error) {
         await Promise.all([
@@ -181,12 +182,16 @@ export default class CampaignController {
         return true
       }
 
+      if(getByID.first_message?.length > 0) {
+        getLeads = this.#prepareMessage(getLeads, getByID.first_message)
+      }
+
       if(getByID.negotiation?.length > 0) {
         negotiation = await this.#prepareBusiness(getCompany[0].token, getByID.id_tenant, getByID.negotiation)
       }
 
       this.campaignModel.update(campaign_id, { total: getLeads.length })
-      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, getByID.first_message, negotiation)
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation)
 
       return true
     } catch (err) {
@@ -269,6 +274,27 @@ export default class CampaignController {
       }))
     } catch (err) {
       console.log('🚀 ~ CampaignController ~ #prepareForeignKey ~ err:', err)
+    }
+  }
+
+  #prepareMessage(getLeads, firstMessages) {
+    try {
+      let newListLeads = []
+      const length = getLeads.length
+
+      for (const firstMessage of firstMessages) {
+        let range = getLeads.splice(0, Math.round(firstMessage.volume * length / 100))
+        newListLeads = newListLeads.concat(range.map(item => {
+          return {
+            ...item,
+            message: firstMessage
+          }
+        }))
+      }
+
+      return newListLeads
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareMessage ~ err:', err)
     }
   }
 }

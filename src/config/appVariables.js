@@ -24,4 +24,6 @@ export default class AppVariables {
   static APPEnvironment() { return global._variables['APP_ENVIRONMENT'] }
   static MSCRMManager() { return global._variables['MSCRMMANAGER'] }
   static MSWorkflow() { return global._variables['MSWORKFLOW'] }
+  static CoreEMail() { return global._variables['COREEMAIL'] }
+  static CorePass() { return global._variables['COREPASS'] }
 }
