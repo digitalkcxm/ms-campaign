@@ -157,6 +157,12 @@ export default class CRMManagerService {
 
       return result.data
     } catch (err) {
+      console.log('Erro ao criar negociação.', {
+        error: true,
+        status: err.response.status,
+        data: err.response.data
+      })
+
       return {
         error: true,
         status: err.response.status,
