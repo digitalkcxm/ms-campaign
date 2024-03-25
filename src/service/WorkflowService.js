@@ -6,8 +6,8 @@ export default class WorkflowService {
   constructor(logger = {}) {
     this.logger = logger
   }
-
-  async createTicket(Authorization, name, id_phase, responsibles = []) {
+  //
+  async createTicket(Authorization, name, id_phase, responsibles = [], created_by = 0) {
     try {
       const result = await axios.request({
         method: 'post',
@@ -16,7 +16,7 @@ export default class WorkflowService {
         headers: { Authorization, 'Content-Type': 'application/json' },
         data: {
           name,
-          id_user: 0,
+          id_user: created_by,
           id_phase,
           responsibles
         }
