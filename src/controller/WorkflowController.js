@@ -83,7 +83,7 @@ export default class WorkflowController {
         if(checkOpenTickets) return true
       }
 
-      const createTicket = await this.workflowService.createTicket(company, name, id_phase, created_by)
+      const createTicket = await this.workflowService.createTicket(company, name, id_phase, [], created_by)
 
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 
