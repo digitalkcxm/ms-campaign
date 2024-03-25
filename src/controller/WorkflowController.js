@@ -31,7 +31,7 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation, created_by) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
 
@@ -47,6 +47,7 @@ export default class WorkflowController {
         ignore_open_tickets,
         negotiation,
         message: lead.message,
+        created_by,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -70,7 +71,7 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message) {
+  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
@@ -82,7 +83,7 @@ export default class WorkflowController {
         if(checkOpenTickets) return true
       }
 
-      const createTicket = await this.workflowService.createTicket(company, name, id_phase)
+      const createTicket = await this.workflowService.createTicket(company, name, id_phase, created_by)
 
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 

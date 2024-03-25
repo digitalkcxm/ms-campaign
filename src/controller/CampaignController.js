@@ -191,7 +191,7 @@ export default class CampaignController {
       }
 
       this.campaignModel.update(campaign_id, { total: getLeads.length })
-      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation)
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation, getByID.created_by)
 
       return true
     } catch (err) {
