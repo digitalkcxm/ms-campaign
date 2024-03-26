@@ -27,7 +27,7 @@ export default class CampaignVersionController {
           const keys = Object.keys(ng.values)
 
           for (const key of keys) {
-            ng.values[key] = ng.values[key].replace(/^R\$\s*/, '')
+            if(typeof ng.values[key] == 'string') ng.values[key] = ng.values[key].replace(/^R\$\s*/, '')
           }
 
           return ng
