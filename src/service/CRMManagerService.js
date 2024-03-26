@@ -31,6 +31,7 @@ export default class CRMManagerService {
         data.rules = []
       }
 
+      console.log('DATA ====> ', JSON.stringify(data))
       const result = await axios.request({
         method: 'post',
         maxBodyLength: Infinity,
