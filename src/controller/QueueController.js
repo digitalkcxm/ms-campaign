@@ -28,7 +28,7 @@ export default class QueueController {
       rabbit.assertQueue(queueName, { durable: true })
       rabbit.bindQueue(queueName, exchange_name, routingKey)
 
-      rabbit.prefetch(100)
+      rabbit.prefetch(10)
 
       rabbit.consume(queueName, async (msg) => {
         const result = JSON.parse(msg.content.toString())
@@ -61,7 +61,7 @@ export default class QueueController {
       rabbit.assertQueue(queue_dead_name, { durable: true })
       rabbit.assertQueue(queue_name, { durable: true, deadLetterExchange: exchange_dead_name })
 
-      rabbit.prefetch(100)
+      rabbit.prefetch(10)
 
       rabbit.assertExchange(exchange_dead_name, 'fanout', { durable: 'true' })
       rabbit.assertExchange(exchange_name, 'direct', { durable: 'true' })
