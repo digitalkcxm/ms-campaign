@@ -89,7 +89,7 @@ export default class WorkflowController {
         name: 'Campaign',
         channel: checkCampaign.first_message[0]?.type || '',
         url: '',
-        description: '',
+        description: `CampaignId: ${checkCampaign.id}`
       }
 
       const createTicket = await this.workflowService.createTicket(company, name, id_phase, origin)
