@@ -23,8 +23,6 @@ export default class WorkflowService {
         }
       })
 
-    try {
-      const result = await axios.post(url, data, { headers })
       return result.data
     } catch (err) {
       return err.response.data
