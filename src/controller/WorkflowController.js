@@ -80,16 +80,16 @@ export default class WorkflowController {
 
       const getDetailsCompany = await this.companyService.getBytoken(company)
 
-      if(ignore_open_tickets) {
+      if (ignore_open_tickets) {
         const checkOpenTickets = await this.#checkOpenTickets(company, crm.id_crm)
-        if(checkOpenTickets) return true
+        if (checkOpenTickets) return true
       }
 
       let channel = ''
 
-      if(checkCampaign.first_message[0]?.type == 'waba'){
+      if (checkCampaign.first_message[0]?.type == 'waba') {
         channel = 'Whatsapp'
-      }else{
+      } else {
         channel = checkCampaign.first_message[0]?.type
       }
 
@@ -98,30 +98,30 @@ export default class WorkflowController {
         name: 'Campaign',
         channel: channel,
         url: '',
-        description: `CampaignId: ${checkCampaign.id}`
+        description: checkCampaign.campaign_name
       }
 
       const createTicket = await this.workflowService.createTicket(company, name, id_phase, origin)
 
-      if(!createTicket.id){
+      if (!createTicket.id) {
         console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
         return false
       }
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 
-      if(negotiation) {
+      if (negotiation) {
         this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
       }
 
-      if(message) {
+      if (message) {
         this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
       }
 
-      if(negotiation) {
+      if (negotiation) {
         this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
       }
 
-      if(message) {
+      if (message) {
         this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
       }
 
@@ -144,7 +144,7 @@ export default class WorkflowController {
   async #checkOpenTickets(company, id_crm) {
     try {
       const checkOpenTickets = await this.workflowService.checkOpenTickets(company, id_crm)
-      if(!checkOpenTickets || checkOpenTickets.length <= 0) return false
+      if (!checkOpenTickets || checkOpenTickets.length <= 0) return false
 
       return checkOpenTickets.filter(ticket => ticket.open).length > 0
     } catch (err) {
@@ -167,7 +167,7 @@ export default class WorkflowController {
 
       const createMainNegotiation = await CRMManagerService.createSingleJSON(company, tenantID, objMainNegotiation)
 
-      if(data.length <= 0) return true
+      if (data.length <= 0) return true
 
       const createNegotiation = await Promise.all(data.map(async item => {
         const obj = {
@@ -176,7 +176,7 @@ export default class WorkflowController {
           created_by: 0
         }
 
-        if(item.fk) obj.data[item.fk] = createMainNegotiation.id
+        if (item.fk) obj.data[item.fk] = createMainNegotiation.id
 
         return await CRMManagerService.createSingleJSON(company, tenantID, obj)
       }))
