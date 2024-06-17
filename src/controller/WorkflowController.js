@@ -117,14 +117,6 @@ export default class WorkflowController {
         this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
       }
 
-      if (negotiation) {
-        this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
-      }
-
-      if (message) {
-        this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
-      }
-
       if (end_date) {
         this.workflowService.setSLA(company, createTicket.id, id_workflow, checkCampaign.end_date)
       }
