@@ -7,21 +7,19 @@ export default class WorkflowService {
     this.logger = logger
   }
 
-  async createTicket(Authorization, name, id_phase, responsibles = []) {
-    try {
-      const result = await axios.request({
-        method: 'post',
-        maxBodyLength: Infinity,
-        url: `${AppVariables.MSWorkflow()}/api/v1/ticket`,
-        headers: { Authorization, 'Content-Type': 'application/json' },
-        data: {
-          name,
-          id_user: 0,
-          id_phase,
-          responsibles
-        }
-      })
+  async createTicket(Authorization, name, id_phase, origin, responsibles = []) {
+    const url = `${AppVariables.MSWorkflow()}/api/v1/ticket`
+    const headers = { Authorization, 'Content-Type': 'application/json' }
+    const data = {
+      name,
+      id_user: 0,
+      id_phase,
+      responsibles,
+      origin
+    }
 
+    try {
+      const result = await axios.post(url, data, { headers })
       return result.data
     } catch (err) {
       return err.response.data

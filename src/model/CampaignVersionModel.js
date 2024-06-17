@@ -46,7 +46,7 @@ export default class CampaignVersionModel {
   async getByID(id) {
     try {
       const result = await this.database('campaign_version')
-        .select('id', 'id_company', 'id_workflow', 'id_campaign', 'id_status', 'created_by', 'canceled_by', 'draft', 'repeat', 'start_date', 'repetition_rule', 'filter', 'negotiation', 'active', 'created_at', 'updated_at', 'end_date', 'id_phase')
+        .select('id', 'id_company', 'id_workflow', 'id_campaign', 'id_status', 'created_by', 'canceled_by', 'draft', 'repeat', 'start_date', 'repetition_rule', 'filter', 'negotiation', 'active', 'created_at', 'updated_at', 'end_date', 'id_phase', 'first_message')
         .where({ id })
 
       return result[0]

@@ -16,4 +16,13 @@ const statusByID = {
   6: 'finished'
 }
 
-export { status, statusByID }
+const channel = {
+  'chat': 1,
+  'whatsapp': 2,
+  'waba': 2,
+  'sms': 3,
+  'email': 4,
+  'phone': 6
+}
+
+export { status, statusByID, channel }
