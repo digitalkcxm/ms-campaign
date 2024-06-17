@@ -18,9 +18,22 @@ export default class CampaignVersionController {
     }
   }
 
-  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
+  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
     const campaignVersion = {}
+
     try {
+      if(negotiation.length > 0) {
+        negotiation = negotiation.map(ng => {
+          const keys = Object.keys(ng.values)
+
+          for (const key of keys) {
+            if(typeof ng.values[key] == 'string') ng.values[key] = ng.values[key].replace(/^R\$\s*/, '')
+          }
+
+          return ng
+        })
+      }
+
       await this.campaignVersionModel.update(id_campaign, created_by)
 
       campaignVersion.id_company = id_company
@@ -35,6 +48,9 @@ export default class CampaignVersionController {
       campaignVersion.filter = JSON.stringify(filter)
       campaignVersion.end_date = end_date ? moment(new Date(end_date)).format() : null
       campaignVersion.id_phase = id_phase
+      campaignVersion.ignore_open_tickets = ignore_open_tickets
+      campaignVersion.first_message = JSON.stringify(first_message)
+      campaignVersion.negotiation = JSON.stringify(negotiation)
 
       const result = await this.campaignVersionModel.create(campaignVersion)
 

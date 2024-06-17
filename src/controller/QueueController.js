@@ -28,7 +28,7 @@ export default class QueueController {
       rabbit.assertQueue(queueName, { durable: true })
       rabbit.bindQueue(queueName, exchange_name, routingKey)
 
-      rabbit.prefetch(100)
+      rabbit.prefetch(10)
 
       rabbit.consume(queueName, async (msg) => {
         const result = JSON.parse(msg.content.toString())
@@ -64,7 +64,7 @@ export default class QueueController {
       rabbit.assertQueue(queue_dead_name, { durable: true })
       rabbit.assertQueue(queue_name, { durable: true, deadLetterExchange: exchange_dead_name })
 
-      rabbit.prefetch(100)
+      rabbit.prefetch(10)
 
       rabbit.assertExchange(exchange_dead_name, 'fanout', { durable: 'true' })
       rabbit.assertExchange(exchange_name, 'direct', { durable: 'true' })
@@ -83,9 +83,9 @@ export default class QueueController {
         if(result.type == 'update_status_campaign') {
           process = await this.campaignController.updateStatusCampaign(result.company, result.id_campaign, result.id_campaign_version, result.status)
         }else {
-          const { company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm } = result
+          const { company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by} = result
 
-          process = await this.workflowController.createTicket(company, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm)
+          process = await this.workflowController.createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by)
         }
 
         if (!process) {

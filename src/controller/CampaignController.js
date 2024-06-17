@@ -1,11 +1,12 @@
 import moment from 'moment'
-import { status, statusByID } from '../model/Enumarations.js'
+
 import ErrorHelper from '../helper/ErrorHelper.js'
+import CompanyModel from '../model/CompanyModel.js'
 import CampaignModel from '../model/CampaignModel.js'
 import WorkflowController from './WorkflowController.js'
+import { status, statusByID } from '../model/Enumarations.js'
+import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
-import CRMManagerService from '../service/CRMMangerService.js'
-import CompanyModel from '../model/CompanyModel.js'
 
 export default class CampaignController {
   constructor(database = {}, logger = {}) {
@@ -71,7 +72,7 @@ export default class CampaignController {
     }
   }
 
-  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase) {
+  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
     const campaign = {}
     try {
       campaign.id_company = company.id
@@ -84,7 +85,7 @@ export default class CampaignController {
 
       const createCampaign = await this.campaignModel.create(campaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
+      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
 
       return {
         id: createCampaign.id,
@@ -97,14 +98,17 @@ export default class CampaignController {
         total_registrations: 0,
         active: createCampaign.active,
         end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
-        id_phase: createVersion.id_phase
+        id_phase: createVersion.id_phase,
+        ignore_open_tickets: createVersion.ignore_open_tickets,
+        first_message: createVersion.first_message,
+        negotiation: createVersion.negotiation
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Create', 'An error occurred when trying creating campaign.', { company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter }, err)
     }
   }
 
-  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase) {
+  async update(company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, repeat, active, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
     try {
       const newCampaign = {}
 
@@ -118,7 +122,7 @@ export default class CampaignController {
 
       const updateCampaign = await this.campaignModel.update(id, newCampaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase)
+      const createVersion = await this.campaignVersionController.create(company.id, newCampaign.id_workflow, updateCampaign.id, edited_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
 
       return {
         id: updateCampaign.id,
@@ -131,7 +135,10 @@ export default class CampaignController {
         total_registrations: 0,
         active: updateCampaign.active,
         end_date: moment(createVersion.end_date).format('DD/MM/YYYY HH:mm:ss'),
-        id_phase: createVersion.id_phase
+        id_phase: createVersion.id_phase,
+        ignore_open_tickets: createVersion.ignore_open_tickets,
+        first_message: createVersion.first_message,
+        negotiation: createVersion.negotiation
       }
     } catch (err) {
       throw new ErrorHelper('CampaignController', 'Update', 'An error occurred when trying updating campaign.', { company, id, name, id_workflow, repetition_rule, edited_by, start_date, draft, active, filter }, err)
@@ -139,6 +146,8 @@ export default class CampaignController {
   }
 
   async executeCampaign(company_id, campaign_id, campaign_version_id) {
+    let negotiation = false
+
     try {
       const checkCampaign = await this.campaignModel.getByID(company_id, campaign_id)
       if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
@@ -155,9 +164,9 @@ export default class CampaignController {
 
       if (getByID.campaign_version_id != campaign_version_id) return true
 
-      const getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+      let getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
 
-      if(getLeads && getLeads.error) {
+      if(getLeads?.error) {
         await Promise.all([
           this.campaignModel.update(campaign_id, { id_status: status.error }),
           this.campaignVersionController.updateStatus(campaign_version_id, status.error)
@@ -173,8 +182,16 @@ export default class CampaignController {
         return true
       }
 
-      this.campaignModel.update(campaign_id, { total: getLeads.length }),
-      await this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow)
+      if(getByID.first_message?.length > 0) {
+        getLeads = this.#prepareMessage(getLeads, getByID.first_message)
+      }
+
+      if(getByID.negotiation?.length > 0) {
+        negotiation = await this.#prepareBusiness(getCompany[0].token, getByID.id_tenant, getByID.negotiation)
+      }
+
+      this.campaignModel.update(campaign_id, { total: getLeads.length })
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation, getByID.created_by)
 
       return true
     } catch (err) {
@@ -195,6 +212,89 @@ export default class CampaignController {
       ])
     } catch (err) {
       console.log('🚀 ~ CampaignController ~ updateStatusCampaign ~ err:', err)
+    }
+  }
+
+  async #prepareBusiness(company, tenantID, negotiation) {
+    const newNegotiation = {}
+
+    try {
+      const getData = await Promise.all([
+        CRMManagerService.getPrincipalTemplateByBusiness(company, tenantID),
+        CRMManagerService.getAllTables(company, tenantID)
+      ])
+
+      const principalTemplateBusiness = getData[0]
+      const allTables = getData[1]
+
+      newNegotiation.main = this.#prepareMainBusiness(principalTemplateBusiness)
+      newNegotiation.data = await this.#prepareForeignKey(company, tenantID, allTables, newNegotiation.main.name, negotiation)
+
+      return newNegotiation
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ prepareBusiness ~ err:', err)
+    }
+  }
+
+  #prepareMainBusiness(template) {
+    try {
+      const obj = {}
+
+      obj.template = template.id
+
+      const customer = template.fields.filter(item => item.column == 'idcliente' || item.column == 'id_cliente')
+      const ticket = template.fields.filter(item => item.column == 'idticket' || item.column == 'id_ticket')
+
+      obj.name = template.table
+      obj.id_cliente = customer.length > 0 ? customer[0].column : ''
+      obj.id_ticket = ticket.length > 0 ? ticket[0].column : ''
+
+      return obj
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareMainBusiness ~ err:', err)
+
+    }
+  }
+
+  async #prepareForeignKey(company, tenantID, allTables, table_target, negotiation) {
+    try {
+      return await Promise.all(negotiation.map(async item => {
+        const template = await CRMManagerService.getTemplateByID(company, tenantID, item.template)
+        const table = allTables.business.filter(table => table.table_name == template.table_name)
+
+        if(table.length <= 0) return item
+
+        const fk = table[0].relations.filter(relation => relation.table_target == table_target)
+
+        if(fk.length <= 0) return item
+
+        item.fk = fk[0].field
+
+        return item
+      }))
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareForeignKey ~ err:', err)
+    }
+  }
+
+  #prepareMessage(getLeads, firstMessages) {
+    try {
+      let newListLeads = []
+      const length = getLeads.length
+
+      for (const firstMessage of firstMessages) {
+        let range = getLeads.splice(0, Math.round(firstMessage.volume * length / 100))
+        newListLeads = newListLeads.concat(range.map(item => {
+          return {
+            ...item,
+            message: firstMessage
+          }
+        }))
+      }
+
+      return newListLeads
+    } catch (err) {
+      console.log('🚀 ~ CampaignController ~ #prepareMessage ~ err:', err)
     }
   }
 }
