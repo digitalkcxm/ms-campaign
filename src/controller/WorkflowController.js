@@ -87,7 +87,7 @@ export default class WorkflowController {
 
       let channel = ''
 
-      if(checkCampaign.first_message[0]?.type.toLower() == 'waba'){
+      if(checkCampaign.first_message[0]?.type == 'waba'){
         channel = 'Whatsapp'
       }else{
         channel = checkCampaign.first_message[0]?.type
