@@ -1,15 +1,17 @@
-import { status } from '../model/Enumarations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
 import WorkflowModel from '../model/WorkflowModel.js'
 import MessageController from './MessageController.js'
 import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
+import { status, channel } from '../model/Enumarations.js'
 import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
+import CampaignModel from '../model/CampaignModel.js'
 
 export default class WorkflowController {
   constructor(database = {}, logger = {}) {
+    this.campaignModel = new CampaignModel(database)
     this.companyService = new CompanyService()
     this.workflowModel = new WorkflowModel(database)
     this.workflowService = new WorkflowService(logger)
@@ -21,7 +23,7 @@ export default class WorkflowController {
     try {
       const getID = await this.workflowModel.getWorkflowID(id_company, id_workflow)
 
-      if(getID.length > 0) return getID[0].id
+      if (getID.length > 0) return getID[0].id
 
       const result = await this.workflowModel.createWorkflowID(id_company, id_workflow)
 
@@ -74,34 +76,55 @@ export default class WorkflowController {
   async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
-      if(checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
+      if (checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
 
       const getDetailsCompany = await this.companyService.getBytoken(company)
 
-      if(ignore_open_tickets) {
+      if (ignore_open_tickets) {
         const checkOpenTickets = await this.#checkOpenTickets(company, crm.id_crm)
-        if(checkOpenTickets) return true
+        if (checkOpenTickets) return true
       }
 
-      const createTicket = await this.workflowService.createTicket(company, name, id_phase, [], created_by)
+      let channel = ''
 
+      if (checkCampaign.first_message[0]?.type == 'waba') {
+        channel = 'Whatsapp'
+      } else {
+        channel = checkCampaign.first_message[0]?.type
+      }
+
+
+      const origin = {
+        name: 'Campaign',
+        channel: channel,
+        url: '',
+        description: checkCampaign.campaign_name
+      }
+
+      const createTicket = await this.workflowService.createTicket(company, name, id_phase, origin)
+
+      if (!createTicket.id) {
+        console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
+        return false
+      }
       await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 
-      if(negotiation) {
+      if (negotiation) {
         this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
       }
 
-      if(message) {
+      if (message) {
         this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
       }
 
-      if(end_date) {
+      if (end_date) {
         this.workflowService.setSLA(company, createTicket.id, id_workflow, checkCampaign.end_date)
       }
 
       RabbitMQService.sendToExchangeQueue(`automation:events:${getDetailsCompany.name}`, `automation:events:${getDetailsCompany.name}`, {
         event: 'create_ticket',
-        id_ticket: createTicket.id
+        id_ticket: createTicket.id,
+        origin
       })
 
       return true
@@ -113,7 +136,7 @@ export default class WorkflowController {
   async #checkOpenTickets(company, id_crm) {
     try {
       const checkOpenTickets = await this.workflowService.checkOpenTickets(company, id_crm)
-      if(!checkOpenTickets || checkOpenTickets.length <= 0) return false
+      if (!checkOpenTickets || checkOpenTickets.length <= 0) return false
 
       return checkOpenTickets.filter(ticket => ticket.open).length > 0
     } catch (err) {
@@ -136,7 +159,7 @@ export default class WorkflowController {
 
       const createMainNegotiation = await CRMManagerService.createSingleJSON(company, tenantID, objMainNegotiation)
 
-      if(data.length <= 0) return true
+      if (data.length <= 0) return true
 
       const createNegotiation = await Promise.all(data.map(async item => {
         const obj = {
@@ -145,7 +168,7 @@ export default class WorkflowController {
           created_by: 0
         }
 
-        if(item.fk) obj.data[item.fk] = createMainNegotiation.id
+        if (item.fk) obj.data[item.fk] = createMainNegotiation.id
 
         return await CRMManagerService.createSingleJSON(company, tenantID, obj)
       }))

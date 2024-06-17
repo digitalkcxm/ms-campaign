@@ -51,6 +51,9 @@ export default class QueueController {
   }
 
   async campaignCreateTicket(rabbit) {
+    let process
+    const MAX_RETRY_ATTEMPTS = 3
+
     const queue_name = 'campaign_create_ticket'
     const queue_name_binded = 'campaign_create_ticket'
     const queue_dead_name = 'dead_campaign_create_ticket'
@@ -70,8 +73,11 @@ export default class QueueController {
       rabbit.bindQueue(queue_name, exchange_name, queue_name_binded)
 
       rabbit.consume(queue_name, async msg => {
-        let process
-        const result = JSON.parse(msg.content.toString())
+        const headers = msg.properties.headers || {}
+        const retryCount = headers['x-retry-count'] || 0
+
+        const message = msg.content.toString()
+        const result = JSON.parse(message)
 
 
         if(result.type == 'update_status_campaign') {
@@ -83,7 +89,17 @@ export default class QueueController {
         }
 
         if (!process) {
-          rabbit.reject(msg)
+          if (retryCount < MAX_RETRY_ATTEMPTS) {
+            const newHeaders = { ...headers, 'x-retry-count': retryCount + 1 }
+            rabbit.nack(msg, false, false)
+            rabbit.sendToQueue(queue_name, Buffer.from(message), {
+              headers: newHeaders,
+              persistent: true
+            })
+          }else{
+            rabbit.nack(msg, false, false)
+          }
+
         } else {
           rabbit.ack(msg)
         }

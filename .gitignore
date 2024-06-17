@@ -78,3 +78,5 @@ __tests__/coverage/
 settings.json
 
 script.js
+.vscode
+.vs 
