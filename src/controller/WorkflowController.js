@@ -85,9 +85,18 @@ export default class WorkflowController {
         if(checkOpenTickets) return true
       }
 
+      let channel = ''
+
+      if(checkCampaign.first_message[0]?.type.toLower() == 'waba'){
+        channel = 'Whatsapp'
+      }else{
+        channel = checkCampaign.first_message[0]?.type
+      }
+
+
       const origin = {
         name: 'Campaign',
-        channel: checkCampaign.first_message[0]?.type || '',
+        channel: channel,
         url: '',
         description: `CampaignId: ${checkCampaign.id}`
       }
