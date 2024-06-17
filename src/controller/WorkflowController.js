@@ -1,4 +1,3 @@
-import { status } from '../model/Enumarations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
 import WorkflowModel from '../model/WorkflowModel.js'
 import MessageController from './MessageController.js'
@@ -6,7 +5,7 @@ import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
 import { status, channel } from '../model/Enumarations.js'
-import CRMManagerService from '../service/CRMMangerService.js'
+import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
 import CampaignModel from '../model/CampaignModel.js'
 
