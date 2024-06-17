@@ -8,7 +8,29 @@ export default class CampaignVersionModel {
   async create(obj) {
     try {
       const result = await this.database('campaign_version')
-        .returning(['id', 'id_company', 'id_workflow', 'id_campaign', 'id_status', 'created_by', 'canceled_by', 'draft', 'repeat', 'start_date', 'repetition_rule', 'filter', 'negotiation', 'active', 'created_at', 'updated_at', 'end_date', 'id_phase'])
+        .returning([
+          'id',
+          'id_company',
+          'id_workflow',
+          'id_campaign',
+          'id_status',
+          'created_by',
+          'canceled_by',
+          'draft',
+          'repeat',
+          'start_date',
+          'repetition_rule',
+          'filter',
+          'negotiation',
+          'active',
+          'created_at',
+          'updated_at',
+          'end_date',
+          'id_phase',
+          'ignore_open_tickets',
+          'first_message',
+          'negotiation'
+        ])
         .insert(obj)
 
       return result[0]
