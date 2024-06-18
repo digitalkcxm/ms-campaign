@@ -309,7 +309,7 @@ build_prod:
     - export VAULT_ADDR="${VAULT_ADDR}"
     - export VAULT_TOKEN="${VAULT_TOKEN}"
     - export TAG_RELEASE=`git describe --abbrev=0 --tags`
-    - export VERSION="v1.7.0"
+    - export VERSION="${TAG_RELEASE}"
   script:
     - >
       wget --header='PRIVATE-TOKEN: '${GITLAB_TOKEN}'' 'https://'${URL_GITLAB}'/api/v4/projects/'${PROJECT_SCRIPTS_ID}'/repository/files/build_img.sh/raw?ref=master' -O build_img.sh
