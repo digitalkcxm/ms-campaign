@@ -103,6 +103,8 @@ export default class WorkflowController {
 
       const createTicket = await this.workflowService.createTicket(company, name, id_phase, origin)
 
+      console.log('🚀 ~ WorkflowController ~ createTicket ~ createTicket:', createTicket)
+
       if (!createTicket.id) {
         console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
         return false
