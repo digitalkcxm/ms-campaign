@@ -8,7 +8,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "start": "node src/index.js",
+    "start": "node -r newrelic src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\"",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll",
@@ -34,6 +34,7 @@
     "knex": "^3.1.0",
     "moment": "^2.30.1",
     "moment-timezone": "^0.5.45",
+    "newrelic": "^11.22.0",
     "node-schedule": "^2.1.1",
     "pg": "^8.11.3",
     "pino": "^8.17.2",
