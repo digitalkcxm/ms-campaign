@@ -15,7 +15,6 @@ import AppVariables from './appVariables.js'
 import database from './database/database.js'
 import httpLogger from '../middlewares/http-logger.js'
 
-
 AppVariables.loadConfig()
 
 const app = express()
@@ -46,9 +45,3 @@ function startServer() {
 }
 
 export { startServer, app, database, logger, connRabbit, redis, tracing }
-
-
-
-
-
-
