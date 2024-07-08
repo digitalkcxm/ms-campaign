@@ -33,7 +33,7 @@ app.use(compression())
 routes(app, database, logger, redis, tracing)
 
 function startServer() {
-  if(process.env.NODE_ENV !== 'production') {
+  if(process.env.NODE_ENV === 'production') {
     newrelic.instrumentLoadedModule(
       "express", // the module's name, as a string
       app // the module instance
