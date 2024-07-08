@@ -21,7 +21,6 @@ AppVariables.loadConfig()
 const app = express()
 const redis = AppVariables.stateEnv() !== 'testing' ? Redis.newConnection() : ''
 const connRabbit = AppVariables.stateEnv() !== 'testing' ? await rabbitmq.newConnection() : ''
-//const newrelic = require('newrelic');
 
 moment.tz.setDefault('America/Sao_Paulo')
 
