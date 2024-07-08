@@ -1,3 +1,4 @@
+import newrelic from 'newrelic'
 import helmet from 'helmet'
 import express from 'express'
 import moment from 'moment-timezone'
@@ -14,11 +15,13 @@ import AppVariables from './appVariables.js'
 import database from './database/database.js'
 import httpLogger from '../middlewares/http-logger.js'
 
+
 AppVariables.loadConfig()
 
 const app = express()
 const redis = AppVariables.stateEnv() !== 'testing' ? Redis.newConnection() : ''
 const connRabbit = AppVariables.stateEnv() !== 'testing' ? await rabbitmq.newConnection() : ''
+//const newrelic = require('newrelic');
 
 moment.tz.setDefault('America/Sao_Paulo')
 
@@ -30,8 +33,23 @@ app.use(compression())
 routes(app, database, logger, redis, tracing)
 
 function startServer() {
-  app.use(httpLogger)
-  app.listen(process.env.PORT, () => logger.info(`Server running in port ${process.env.PORT}`))
+  if(process.env.NODE_ENV !== 'production') {
+    newrelic.instrumentLoadedModule(
+      "express", // the module's name, as a string
+      app // the module instance
+    )   
+  }
+ 
+  app.use(httpLogger);
+  app.listen(process.env.PORT, () =>
+    logger.info(`Server running in port ${process.env.PORT}`)
+  );
 }
 
 export { startServer, app, database, logger, connRabbit, redis, tracing }
+
+
+
+
+
+
