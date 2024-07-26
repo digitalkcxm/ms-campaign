@@ -17,18 +17,12 @@ export default class QueueController {
       const routingKey = 'scheduling_campaign'
       const queueName = 'scheduling_campaign'
 
-      rabbit.assertExchange(exchange_name, 'direct', {
+      rabbit.assertExchange(exchange_name, 'x-delayed-message', {
         autoDelete: false,
         durable: true,
         passive: true,
+        arguments: { 'x-delayed-type': 'direct' }
       })
-
-      // rabbit.assertExchange(exchange_name, 'x-delayed-message', {
-      //   autoDelete: false,
-      //   durable: true,
-      //   passive: true,
-      //   arguments: { 'x-delayed-type': 'direct' }
-      // })
 
       rabbit.assertQueue(queueName, { durable: true })
       rabbit.bindQueue(queueName, exchange_name, routingKey)

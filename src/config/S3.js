@@ -1,8 +1,6 @@
 import AppVariables from './appVariables.js'
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3'
 import readline from 'readline'
-// import { S3Client } from '@aws-sdk/client-s3'
-// import { GetObjectCommand } from '@aws-sdk/client-s3'
 
 export default class S3 {
   newS3Instance(region = 'sa-east-1') {
@@ -12,11 +10,6 @@ export default class S3 {
       credentials,
       region
     })
-
-    // return new AWS.S3({
-    //   credentials,
-    //   region
-    // })
   }
 
   async downloadFile(key) {
