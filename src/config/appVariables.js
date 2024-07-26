@@ -26,4 +26,7 @@ export default class AppVariables {
   static MSWorkflow() { return global._variables['MSWORKFLOW'] }
   static CoreEMail() { return global._variables['COREEMAIL'] }
   static CorePass() { return global._variables['COREPASS'] }
+  static accessKeyId() {return global._variables['ACCESSKEYID']}
+  static secretAccessKey() {return global._variables['SECRETACCESSKEY']}
+  static bucketCampaing() {return global._variables['BUCKET_CAMPAIGN']}
 }

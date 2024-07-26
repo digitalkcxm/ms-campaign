@@ -30,7 +30,8 @@ export default class CampaignVersionModel {
           'id_phase',
           'ignore_open_tickets',
           'first_message',
-          'negotiation'
+          'negotiation',
+          'file_url'
         ])
         .insert(obj)
 

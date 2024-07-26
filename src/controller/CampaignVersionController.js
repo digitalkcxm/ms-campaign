@@ -18,7 +18,7 @@ export default class CampaignVersionController {
     }
   }
 
-  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
+  async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, file_url) {
     const campaignVersion = {}
 
     try {
@@ -51,6 +51,7 @@ export default class CampaignVersionController {
       campaignVersion.ignore_open_tickets = ignore_open_tickets
       campaignVersion.first_message = JSON.stringify(first_message)
       campaignVersion.negotiation = JSON.stringify(negotiation)
+      campaignVersion.file_url = file_url
 
       const result = await this.campaignVersionModel.create(campaignVersion)
 
