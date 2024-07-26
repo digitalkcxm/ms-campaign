@@ -96,7 +96,7 @@ export default class MessageController {
     }
   }
 
-  async #sms(company, tenantID, ticket, crm, message) {
+  async #sms(company, tenantID, ticket, crm, message, contato) {
     let phones
     let results = []
 
@@ -105,8 +105,10 @@ export default class MessageController {
 
       const contactField = this.#getVariable(message.phone)
 
-      if (contactField.type == 'crm') {
+      if (contactField.type == 'crm' && !contato) {
         phones = await crmController.getContact(company, tenantID, contactField.data[1], table, column, id_crm, 3)
+      }else{
+        phones = [contato]
       }
 
       if (phones === false) return false
@@ -141,7 +143,7 @@ export default class MessageController {
     }
   }
 
-  async #whatsapp(company, tenantID, ticket, crm, message) {
+  async #whatsapp(company, tenantID, ticket, crm, message, contato) {
     let phones
     let results = []
 
@@ -150,10 +152,12 @@ export default class MessageController {
 
       const contactField = this.#getVariable(message.phone)
 
-      if (contactField.type == 'crm') {
+      if (contactField.type == 'crm' && !contato) {
         phones = await crmController.getContact(company, tenantID, contactField.data[1], table, column, id_crm, 3)
+      }else{
+        phones = [contato]
       }
-
+      
       if (phones === false) return false
 
       if (phones.length <= 0) {
