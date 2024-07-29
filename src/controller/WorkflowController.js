@@ -72,6 +72,7 @@ export default class WorkflowController {
         id_phase,
         end_date,
         name: lead.nome,
+        contato: lead.contato,
         id_campaign,
         id_campaign_version,
         id_workflow,
