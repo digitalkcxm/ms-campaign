@@ -311,15 +311,33 @@ export default class CampaignController {
 
       let leads = []
       if (contentFile) {
-        //TODO Fazer a validação da quantidade de itens em contentFile
+        if (contentFile.length <= 1) return leads
+
+        const headers = contentFile[0].split(';')
+
+        const type = (headers[1] == 'Número' || headers[1] == 'Numero') ? 'phone_number' : 'email'
+
         for (let i = 1; i < contentFile.length; i++) {
           const lineContent = contentFile[i].split(';')
-          const lead = {
-            nome: lineContent[0],
-            contato: lineContent[1]
-          }
 
-          leads.push(lead)
+          if (lineContent.length > 1) {
+            let contact = lineContent[1]
+
+            if (type === 'phone_number') {
+              const foneNumber = this.#foneNumberFormater(lineContent[1])
+
+              if (foneNumber.isValid) {
+                contact = foneNumber.validNumber
+              }
+            }
+
+            const lead = {
+              nome: lineContent[0],
+              contato: contact
+            }
+
+            leads.push(lead)
+          }
         }
       }
 
@@ -327,5 +345,15 @@ export default class CampaignController {
     }
 
     return await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+  }
+
+  #foneNumberFormater(number) {
+    number = number.replace(/\D/g, '')
+    const isValid = number.length === 11
+
+    return {
+      isValid,
+      validNumber: isValid ? number : null
+    }
   }
 }
