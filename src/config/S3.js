@@ -17,8 +17,10 @@ export default class S3 {
       if (!key) {
         throw new Error('filename not informed')
       }
-
       const bucket = AppVariables.bucketCampaing()
+
+      key = key.replace(`${bucket}/`, '')
+
       const s3 = this.newS3Instance()
       const params = {
         Bucket: bucket,
