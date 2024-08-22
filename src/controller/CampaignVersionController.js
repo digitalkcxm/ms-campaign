@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { status } from '../model/Enumarations.js'
+import { status } from '../model/Enumerations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
 import RabbitMQService from '../service/RabbitMQService.js'
 import CampaignVersionModel from '../model/CampaignVersionModel.js'
