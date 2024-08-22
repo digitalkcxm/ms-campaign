@@ -48,9 +48,9 @@ export default (database, logger, redis) => {
     try {
       const XTenantID = req.headers['x-tenant-id']
 
-      const { name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation } = req.body
+      const { name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, fileUrl } = req.body
 
-      const result = await campaignController.create(req.company, XTenantID, name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
+      const result = await campaignController.create(req.company, XTenantID, name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, fileUrl)
 
       return res.status(201).json(result)
     } catch (err) {

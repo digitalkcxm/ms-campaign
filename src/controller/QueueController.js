@@ -27,7 +27,7 @@ export default class QueueController {
       rabbit.assertQueue(queueName, { durable: true })
       rabbit.bindQueue(queueName, exchange_name, routingKey)
 
-      rabbit.prefetch(10)
+      rabbit.prefetch(1)
 
       rabbit.consume(queueName, async (msg) => {
         const result = JSON.parse(msg.content.toString())
@@ -74,18 +74,18 @@ export default class QueueController {
       rabbit.consume(queue_name, async msg => {
         const headers = msg.properties.headers || {}
         const retryCount = headers['x-retry-count'] || 0
-        
+
         const message = msg.content.toString()
         const result = JSON.parse(message)
-        
+
         console.log('🚀 ~ QueueController ~ campaignCreateTicket ~ msg:', result)
 
-        if(result.type == 'update_status_campaign') {
+        if (result.type == 'update_status_campaign') {
           process = await this.campaignController.updateStatusCampaign(result.company, result.id_campaign, result.id_campaign_version, result.status)
-        }else {
-          const { company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by} = result
+        } else {
+          const { company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, campaign_type, contato} = result
 
-          process = await this.workflowController.createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by)
+          process = await this.workflowController.createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, contato, campaign_type)
         }
 
         if (!process) {
@@ -96,7 +96,7 @@ export default class QueueController {
               headers: newHeaders,
               persistent: true
             })
-          }else{
+          } else {
             rabbit.nack(msg, false, false)
           }
 

@@ -4,7 +4,7 @@ import MessageController from './MessageController.js'
 import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
-import { status, channel } from '../model/Enumarations.js'
+import { status } from '../model/Enumarations.js'
 import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
 import CampaignModel from '../model/CampaignModel.js'
@@ -33,9 +33,38 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation, created_by) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation, created_by, campaign_type) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
+
+      let tickets = []
+      for (const lead of leads) {
+        const obj = {
+          company,
+          tenantID,
+          id_phase,
+          end_date,
+          name: lead.nome,
+          contato: lead.contato,
+          id_campaign,
+          id_campaign_version,
+          id_workflow,
+          ignore_open_tickets,
+          negotiation,
+          message: lead.message,
+          created_by,
+          campaign_type,
+          crm: {
+            template: getTemplate.id,
+            table: getTemplate.table,
+            column: 'id',
+            id_crm: lead.id
+          }
+        }
+
+        tickets.push(obj)
+      }
+
 
       await Promise.all(leads.map(lead => RabbitMQService.sendToExchangeQueue('campaign_create_ticket', 'campaign_create_ticket', {
         company,
@@ -43,6 +72,7 @@ export default class WorkflowController {
         id_phase,
         end_date,
         name: lead.nome,
+        contato: lead.contato,
         id_campaign,
         id_campaign_version,
         id_workflow,
@@ -50,6 +80,7 @@ export default class WorkflowController {
         negotiation,
         message: lead.message,
         created_by,
+        campaign_type,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -73,7 +104,7 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by) {
+  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, contato, campaign_type) {
     try {
       const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
       if (checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
@@ -85,12 +116,10 @@ export default class WorkflowController {
         if (checkOpenTickets) return true
       }
 
-      let channel = ''
+      let channel = checkCampaign.first_message[0]?.type
 
       if (checkCampaign.first_message[0]?.type == 'waba') {
         channel = 'Whatsapp'
-      } else {
-        channel = checkCampaign.first_message[0]?.type
       }
 
 
@@ -109,14 +138,17 @@ export default class WorkflowController {
         console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
         return false
       }
-      await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
+
+      if (campaign_type == 'crm') {
+        await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
+      }
 
       if (negotiation) {
         this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
       }
 
       if (message) {
-        this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
+        this.messageController.sendMessage(company, tenantID, createTicket, crm, message, contato)
       }
 
       if (end_date) {
