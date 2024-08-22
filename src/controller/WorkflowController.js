@@ -4,11 +4,11 @@ import MessageController from './MessageController.js'
 import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
-import { status } from '../model/Enumerations.js'
+import { MapIDs_ChannelNameEnum, status } from '../model/Enumerations.js'
 import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
 import CampaignModel from '../model/CampaignModel.js'
-import { MapIDs_TicketEnum } from '../helper/TicketEnum.js'
+
 
 export default class WorkflowController {
   constructor(database = {}, logger = {}) {
@@ -90,7 +90,7 @@ export default class WorkflowController {
       if(!channel_id) {
         throw new Error('Channel not found')
       }
-      const channel = MapIDs_TicketEnum[channel_id]
+      const channel = MapIDs_ChannelNameEnum[channel_id]
  
       const createTicket = await this.workflowService.createTicket(data.company, data.name, data.id_phase, {
         name: 'Campaign',
