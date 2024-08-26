@@ -76,18 +76,17 @@ export default class MessageController {
   #createPhonesMsgPayload(data, phones, variables) {
     if (!phones || phones.length == 0) return []
 
-    const { ticket, workflow_id, channel, message, hsm_id, subject } = data
+    const { ticket, channel, message, hsm_id, subject } = data
     return phones.map((phone) => {
       return {
         ticket_id: ticket.id,
-        workflow_id,
         channel_id: channel.id,
         channel_token: channel.token,
         broker_id: channel.broker_id,
         contact: phone,
-        message,
-        subject: subject || null,
-        hsm_template_message_id: hsm_id || null,
+        message: message.message,
+        subject: subject || '',
+        hsm_template_message_id: hsm_id || '',
         hsm_variables: variables,
       }
     })
