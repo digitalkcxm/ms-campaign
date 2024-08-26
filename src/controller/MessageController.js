@@ -76,7 +76,7 @@ export default class MessageController {
   #createPhonesMsgPayload(data, phones, variables) {
     if (!phones || phones.length == 0) return []
 
-    const { ticket, workflow_id, channel, message, hsm_id } = data
+    const { ticket, workflow_id, channel, message, hsm_id, subject } = data
     return phones.map((phone) => {
       return {
         ticket_id: ticket.id,
@@ -86,8 +86,8 @@ export default class MessageController {
         broker_id: channel.broker_id,
         contact: phone,
         message,
-        subject,
-        hsm_template_message_id: hsm_id,
+        subject: subject || null,
+        hsm_template_message_id: hsm_id || null,
         hsm_variables: variables,
       }
     })
@@ -168,12 +168,9 @@ export default class MessageController {
   }
 
   async #sendToCampaignQueue(company, messages) {
+    const queue_name = `campaign:send_messages:${company.name}`
     for (const message of messages) {
-      await RabbitMQService.sendToExchangeQueue(
-        `campaign:events:${company.name}`,
-        `campaign:events:${company.name}`,
-        message
-      )
+      await RabbitMQService.sendToQueue(queue_name, message)
     }
   }
 

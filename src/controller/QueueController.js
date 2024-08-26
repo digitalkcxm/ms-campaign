@@ -68,7 +68,7 @@ export default class QueueController {
 
       rabbit.assertExchange(exchange_dead_name, 'fanout', { durable: 'true' })
       rabbit.assertExchange(exchange_name, 'direct', { durable: 'true' })
-
+ 
       rabbit.bindQueue(queue_dead_name, exchange_dead_name)
       rabbit.bindQueue(queue_name, exchange_name, queue_name_binded)
 
@@ -86,7 +86,7 @@ export default class QueueController {
         } else {
           const { company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, campaign_type, contato} = result
 
-          process = await this.workflowController.createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, contato, campaign_type)
+          process = await this.workflowController.createTicket({company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, contato, campaign_type})
         }
 
         if (!process) {

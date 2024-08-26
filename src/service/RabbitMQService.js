@@ -24,4 +24,14 @@ export default class RabbitMQService {
       throw new ErrorHelper('RabbitMQService', 'sendToExchangeQueue', 'An error occurred when sending to the exchange queue deleayed.', { exchange, routingKey, data, delayInMilliseconds }, err)
     }
   }
+
+  static async sendToQueue(queue_name, data) {
+    try {
+      const channel = await RabbitMQ.newConnection()
+      channel.assertQueue(queue_name, { durable: true })
+      await channel.sendToQueue(queue_name, Buffer.from(JSON.stringify(data)), { persistent: true })
+    } catch (err) {
+      throw new ErrorHelper('RabbitMQService', 'sendToQueue', 'An error occurred when sending to queue.', { queue_name, data }, err)
+    }
+  }
 }

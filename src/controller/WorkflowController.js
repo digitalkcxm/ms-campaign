@@ -112,8 +112,8 @@ export default class WorkflowController {
 
       const getDetailsCompany = await this.companyService.getBytoken(data.company)
 
-      if (ignore_open_tickets) {
-        const checkOpenTickets = await this.#checkOpenTickets(company, data.crm.id_crm)
+      if (data.ignore_open_tickets) {
+        const checkOpenTickets = await this.#checkOpenTickets(data.company, data.crm.id_crm)
         if (checkOpenTickets) return true
       }
       const channel_id = checkCampaign.first_message[0]?.id_channel
@@ -137,50 +137,55 @@ export default class WorkflowController {
         return false
       }
 
-      if (campaign_type == 'crm') {
+      if (data.campaign_type == 'crm') {
         await this.workflowService.linkCustomer(data.company, createTicket.id, data.crm.template, data.crm.table, data.crm.column, String(data.crm.id_crm))
       }
 
-      if (negotiation) {
+      if (data.negotiation) {
         this.#createNegotiation(data.company, data.tenantID, data.crm.id_crm, createTicket.id_seq, data.negotiation)
       }
 
-      if (message) {
-        const data = {
-          company: {
-            id: getDetailsCompany.id,
-            name: getDetailsCompany.name
-          },
-          tenantID: data.tenantID,
-          ticket: createTicket,
-          crm: data.crm,
-          message: data.message,
-          contato: data.contato,
-          channel: {
-            id: channel_id,
-            token: checkCampaign.first_message[0]?.channel_token,
-            broker_id: checkCampaign.first_message[0]?.broker_id,
-          },
-          workflow_id: data.id_workflow,
-          hsm_id: checkCampaign.first_message[0]?.hsm_id,
-        }
-        this.messageController.sendMessage(data)
+      if (data.message) {
+        const payload = this.#buildMessagePayload(getDetailsCompany, checkCampaign, createTicket, channel_id, data)
+        this.messageController.sendMessage(payload)
       }
 
-      if (end_date) {
+      if (data.end_date) {
         this.workflowService.setSLA(data.company, createTicket.id, data.id_workflow, checkCampaign.end_date)
       }
 
       RabbitMQService.sendToExchangeQueue(`automation:events:${getDetailsCompany.name}`, `automation:events:${getDetailsCompany.name}`, {
         event: 'create_ticket',
         id_ticket: createTicket.id,
-        origin
       })
 
       return true
     } catch (err) {
       console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', err)
     }
+  }
+
+  #buildMessagePayload(getDetailsCompany, checkCampaign, ticket, channel_id, data) {
+    return {
+      company: {
+        id: getDetailsCompany.id,
+        name: getDetailsCompany.name,
+        token: getDetailsCompany.token,
+      },
+      tenantID: data.tenantID,
+      ticket,
+      crm: data.crm,
+      message: data.message,
+      contato: data.contato,
+      req_user_id: data.created_by,
+      channel: {
+        id: channel_id,
+        token: checkCampaign.first_message[0]?.channel_token,
+        broker_id: checkCampaign.first_message[0]?.id_broker,
+      },
+      workflow_id: data.id_workflow,
+      hsm_id: checkCampaign.first_message[0]?.hsm_id,
+    };
   }
   
 
