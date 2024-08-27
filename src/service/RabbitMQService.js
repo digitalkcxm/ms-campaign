@@ -1,5 +1,6 @@
 import RabbitMQ from '../config/RabbitMQ.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
+import {producerConn} from '../config/rabbitmq/RabbitMQ.js'
 
 export default class RabbitMQService {
 
@@ -27,9 +28,10 @@ export default class RabbitMQService {
 
   static async sendToQueue(queue_name, data) {
     try {
-      const channel = await RabbitMQ.newConnection()
-      channel.assertQueue(queue_name, { durable: true })
-      await channel.sendToQueue(queue_name, Buffer.from(JSON.stringify(data)), { persistent: true })
+      const conn = await producerConn.getInstance()
+      const channel = await conn.createChannel()
+      await channel.assertQueue(queue_name, { durable: true, autoDelete: false })
+      channel.sendToQueue(queue_name, Buffer.from(JSON.stringify(data)), { persistent: true })
     } catch (err) {
       throw new ErrorHelper('RabbitMQService', 'sendToQueue', 'An error occurred when sending to queue.', { queue_name, data }, err)
     }
