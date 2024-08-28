@@ -80,7 +80,7 @@ export default class CampaignController {
     try {
      
       if(!first_message || first_message.length === 0 || !first_message[0]?.id_channel ){
-        throw Error('Canal da abordagem é obrigatório')
+        throw new Error('Canal da abordagem é obrigatório')
       }
       campaign.id_company = company.id
       campaign.id_workflow = await this.workflowController.getIDWorkflow(company.id, id_workflow)
