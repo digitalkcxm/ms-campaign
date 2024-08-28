@@ -78,7 +78,8 @@ export default class CampaignController {
   async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, file_url) {
     const campaign = {}
     try {
-      if(!first_message){
+     
+      if(!first_message || first_message.length === 0 || !first_message[0]?.id_channel ){
         throw Error('Canal da abordagem é obrigatório')
       }
       campaign.id_company = company.id

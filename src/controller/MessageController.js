@@ -6,37 +6,6 @@ import { BrokerWhatsappNameEnum, ChannelNameEnum, MapIDs_BrokerNameEnum, MapIDs_
 
 const crmController = new CRMController()
 
-
-//payload
-
-// ticket_id,
-// workflow_id,
-// channel_id,
-// channel_token,
-// broker_id,
-// contact,
-// message,
-// subject,
-// hsm_template_message_id,
-// hsm_variables
-
-// const data = {
-//   company: {
-//     id: getDetailsCompany.id,
-//     name: getDetailsCompany.name,
-//   },
-//   tenantID: data.tenantID,
-//   ticket: createTicket,
-//   crm: data.crm,
-//   message: data.message,
-//   contato: data.contato,
-//   channel_id,
-//   channel_token,
-//   broker_id: checkCampaign.first_message[0]?.broker_id,
-// }
-
-//waba == 3
-
 export default class MessageController {
   async sendMessage(data) {
     try {
