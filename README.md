@@ -281,6 +281,7 @@ A partir do momento que a mensagem é publicada na fila **scheduling_campaign** 
 
 ![Untitled](https://gitlab.digitalk.com.br/digitalk/backend/microservicos/mscampaign/-/raw/master/docs/prepare_leads.png)
 
+
 Finalizado essa fase, o serviço consome as mensagens publicadas na fila **campaign_create_ticket** para de fator  criar os ticket, isso é feito no método **createTicket()** dentro de **/src/controller/WorkflowController.js** seguindo as seguintes etapas.
 
 ![Untitled](https://gitlab.digitalk.com.br/digitalk/backend/microservicos/mscampaign/-/raw/master/docs/create_ticket.png)
