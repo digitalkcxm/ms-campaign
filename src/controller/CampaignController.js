@@ -4,9 +4,11 @@ import ErrorHelper from '../helper/ErrorHelper.js'
 import CompanyModel from '../model/CompanyModel.js'
 import CampaignModel from '../model/CampaignModel.js'
 import WorkflowController from './WorkflowController.js'
-import { status, statusByID } from '../model/Enumarations.js'
+import { status, statusByID } from '../model/Enumerations.js'
 import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
+import S3 from '../config/S3.js'
+import { URL } from 'url'
 
 export default class CampaignController {
   constructor(database = {}, logger = {}) {
@@ -14,6 +16,7 @@ export default class CampaignController {
     this.campaignModel = new CampaignModel(database)
     this.workflowController = new WorkflowController(database, logger)
     this.campaignVersionController = new CampaignVersionController(database, logger)
+    this.S3 = new S3()
   }
 
   async getAll(company, search, searchStatus, size = 50, page = 0) {
@@ -22,7 +25,7 @@ export default class CampaignController {
       const searchStatusID = []
       const offset = page <= 0 ? 0 : size * page
 
-      if(searchStatus) {
+      if (searchStatus) {
         for (const item of searchStatus) {
           const id = status[item.toLowerCase()]
           id && searchStatusID.push(id)
@@ -59,7 +62,7 @@ export default class CampaignController {
   async getByID(company, id) {
     try {
       const result = await this.campaignModel.getByID(company.id, id)
-      if(result.length <= 0) return []
+      if (result.length <= 0) return []
 
       result[0].created_at = moment(result[0].created_at).format('DD/MM/YYYY HH:mm:ss')
       result[0].start_date = moment(result[0].start_date).format('DD/MM/YYYY HH:mm:ss')
@@ -72,9 +75,13 @@ export default class CampaignController {
     }
   }
 
-  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation) {
+  async create(company, tenantID, name, created_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, file_url) {
     const campaign = {}
     try {
+     
+      if(!first_message || first_message.length === 0 || !first_message[0]?.id_channel ){
+        throw new Error('Canal da abordagem é obrigatório')
+      }
       campaign.id_company = company.id
       campaign.id_workflow = await this.workflowController.getIDWorkflow(company.id, id_workflow)
       campaign.id_status = draft ? status.draft : status.scheduled
@@ -85,7 +92,7 @@ export default class CampaignController {
 
       const createCampaign = await this.campaignModel.create(campaign)
 
-      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation)
+      const createVersion = await this.campaignVersionController.create(company.id, campaign.id_workflow, createCampaign.id, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, file_url)
 
       return {
         id: createCampaign.id,
@@ -150,7 +157,7 @@ export default class CampaignController {
 
     try {
       const checkCampaign = await this.campaignModel.getByID(company_id, campaign_id)
-      if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
+      if (checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
 
       const consult = await Promise.all([
         this.campaignModel.update(campaign_id, { id_status: status.running }),
@@ -164,9 +171,9 @@ export default class CampaignController {
 
       if (getByID.campaign_version_id != campaign_version_id) return true
 
-      let getLeads = await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+      let getLeads = await this.#getLeads(getByID, getCompany)
 
-      if(getLeads?.error) {
+      if (getLeads?.error) {
         await Promise.all([
           this.campaignModel.update(campaign_id, { id_status: status.error }),
           this.campaignVersionController.updateStatus(campaign_version_id, status.error)
@@ -174,7 +181,7 @@ export default class CampaignController {
         return false
       }
 
-      if(!getLeads || getLeads == null || getLeads.length <= 0) {
+      if (!getLeads || getLeads == null || getLeads.length <= 0) {
         await Promise.all([
           this.campaignModel.update(campaign_id, { id_status: status.finished }),
           this.campaignVersionController.updateStatus(campaign_version_id, status.finished)
@@ -182,16 +189,17 @@ export default class CampaignController {
         return true
       }
 
-      if(getByID.first_message?.length > 0) {
+      if (getByID.first_message?.length > 0) {
         getLeads = this.#prepareMessage(getLeads, getByID.first_message)
       }
 
-      if(getByID.negotiation?.length > 0) {
+      if (getByID.negotiation?.length > 0) {
         negotiation = await this.#prepareBusiness(getCompany[0].token, getByID.id_tenant, getByID.negotiation)
       }
 
+      const campaign_type = getByID.file_url ? 'file' : 'crm'
       this.campaignModel.update(campaign_id, { total: getLeads.length })
-      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation, getByID.created_by)
+      this.workflowController.sendQueueCreateTicket(getCompany[0].token, getByID.id_tenant, getByID.id_phase, getByID.id, getByID.campaign_version_id, getLeads, getByID.end_date, getByID.id_workflow, getByID.ignore_open_tickets, negotiation, getByID.created_by, campaign_type)
 
       return true
     } catch (err) {
@@ -204,7 +212,7 @@ export default class CampaignController {
     try {
       const getCompany = await this.companyModel.getByToken(company)
       const checkCampaign = await this.campaignModel.getByID(getCompany[0].id, campaign_id)
-      if(checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
+      if (checkCampaign[0].status == status.canceled || checkCampaign[0].status == status.draft || checkCampaign[0].status == status.finished) return true
 
       return await Promise.all([
         this.campaignModel.update(campaign_id, { id_status }),
@@ -262,11 +270,11 @@ export default class CampaignController {
         const template = await CRMManagerService.getTemplateByID(company, tenantID, item.template)
         const table = allTables.business.filter(table => table.table_name == template.table_name)
 
-        if(table.length <= 0) return item
+        if (table.length <= 0) return item
 
         const fk = table[0].relations.filter(relation => relation.table_target == table_target)
 
-        if(fk.length <= 0) return item
+        if (fk.length <= 0) return item
 
         item.fk = fk[0].field
 
@@ -295,6 +303,61 @@ export default class CampaignController {
       return newListLeads
     } catch (err) {
       console.log('🚀 ~ CampaignController ~ #prepareMessage ~ err:', err)
+    }
+  }
+
+  async #getLeads(getByID, getCompany) {
+    if (getByID.file_url) {
+      const url = new URL(getByID.file_url)
+      const path = url.pathname
+
+      const contentFile = await this.S3.downloadFile(path.slice(1))
+
+      let leads = []
+      if (contentFile) {
+        if (contentFile.length <= 1) return leads
+
+        const headers = contentFile[0].split(';')
+
+        const type = (headers[1] == 'Número' || headers[1] == 'Numero') ? 'phone_number' : 'email'
+
+        for (let i = 1; i < contentFile.length; i++) {
+          const lineContent = contentFile[i].split(';')
+
+          if (lineContent.length > 1) {
+            let contact = lineContent[1]
+
+            if (type === 'phone_number') {
+              const foneNumber = this.#foneNumberFormater(lineContent[1])
+
+              if (foneNumber.isValid) {
+                contact = foneNumber.validNumber
+              }
+            }
+
+            const lead = {
+              nome: lineContent[0],
+              contato: contact
+            }
+
+            leads.push(lead)
+          }
+        }
+      }
+
+      return leads
+    }
+
+    return await CRMManagerService.query(getCompany[0].token, getByID.id_tenant, getByID.filter)
+  }
+
+  #foneNumberFormater(number) {
+    number = number.replace(/\D/g, '')
+    const isValid = number.length === 11
+
+    return {
+      isValid,
+      validNumber: isValid ? number : null
     }
   }
 }

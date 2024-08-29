@@ -1,4 +1,3 @@
-import newrelic from 'newrelic'
 import helmet from 'helmet'
 import express from 'express'
 import moment from 'moment-timezone'
@@ -31,17 +30,10 @@ app.use(compression())
 routes(app, database, logger, redis, tracing)
 
 function startServer() {
-  if(process.env.NODE_ENV === 'production') {
-    newrelic.instrumentLoadedModule(
-      "express", // the module's name, as a string
-      app // the module instance
-    )   
-  }
- 
-  app.use(httpLogger);
+  app.use(httpLogger)
   app.listen(process.env.PORT, () =>
     logger.info(`Server running in port ${process.env.PORT}`)
-  );
+  )
 }
 
 export { startServer, app, database, logger, connRabbit, redis, tracing }

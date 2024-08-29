@@ -4,10 +4,11 @@ import MessageController from './MessageController.js'
 import CompanyService from '../service/CompanyService.js'
 import WorkflowService from '../service/WorkflowService.js'
 import RabbitMQService from '../service/RabbitMQService.js'
-import { status, channel } from '../model/Enumarations.js'
+import { MapIDs_ChannelNameEnum, status } from '../model/Enumerations.js'
 import CRMManagerService from '../service/CRMManagerService.js'
 import CampaignVersionController from './CampaignVersionController.js'
 import CampaignModel from '../model/CampaignModel.js'
+
 
 export default class WorkflowController {
   constructor(database = {}, logger = {}) {
@@ -33,9 +34,38 @@ export default class WorkflowController {
     }
   }
 
-  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation, created_by) {
+  async sendQueueCreateTicket(company, tenantID, id_phase, id_campaign, id_campaign_version, leads, end_date, id_workflow, ignore_open_tickets, negotiation, created_by, campaign_type) {
     try {
       const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, tenantID)
+
+      let tickets = []
+      for (const lead of leads) {
+        const obj = {
+          company,
+          tenantID,
+          id_phase,
+          end_date,
+          name: lead.nome,
+          contato: lead.contato,
+          id_campaign,
+          id_campaign_version,
+          id_workflow,
+          ignore_open_tickets,
+          negotiation,
+          message: lead.message,
+          created_by,
+          campaign_type,
+          crm: {
+            template: getTemplate.id,
+            table: getTemplate.table,
+            column: 'id',
+            id_crm: lead.id
+          }
+        }
+
+        tickets.push(obj)
+      }
+
 
       await Promise.all(leads.map(lead => RabbitMQService.sendToExchangeQueue('campaign_create_ticket', 'campaign_create_ticket', {
         company,
@@ -43,6 +73,7 @@ export default class WorkflowController {
         id_phase,
         end_date,
         name: lead.nome,
+        contato: lead.contato,
         id_campaign,
         id_campaign_version,
         id_workflow,
@@ -50,6 +81,7 @@ export default class WorkflowController {
         negotiation,
         message: lead.message,
         created_by,
+        campaign_type,
         crm: {
           template: getTemplate.id,
           table: getTemplate.table,
@@ -73,35 +105,30 @@ export default class WorkflowController {
     }
   }
 
-  async createTicket(company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by) {
+  async createTicket(data = { company, tenantID, id_phase, end_date, name, id_campaign, id_campaign_version, id_workflow, crm, ignore_open_tickets, negotiation, message, created_by, contato, campaign_type}) {
     try {
-      const checkCampaign = await this.campaignVersionController.getByID(id_campaign_version)
+      const checkCampaign = await this.campaignVersionController.getByID(data.id_campaign_version)
       if (checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
 
-      const getDetailsCompany = await this.companyService.getBytoken(company)
+      const getDetailsCompany = await this.companyService.getBytoken(data.company)
 
-      if (ignore_open_tickets) {
-        const checkOpenTickets = await this.#checkOpenTickets(company, crm.id_crm)
+      if (data.ignore_open_tickets) {
+        const checkOpenTickets = await this.#checkOpenTickets(data.company, data.crm.id_crm)
         if (checkOpenTickets) return true
       }
-
-      let channel = ''
-
-      if (checkCampaign.first_message[0]?.type == 'waba') {
-        channel = 'Whatsapp'
-      } else {
-        channel = checkCampaign.first_message[0]?.type
+      const channel_id = checkCampaign.first_message[0]?.id_channel
+     
+      if(!channel_id) {
+        throw new Error('Channel not found')
       }
-
-
-      const origin = {
+      const channel = MapIDs_ChannelNameEnum[channel_id]
+ 
+      const createTicket = await this.workflowService.createTicket(data.company, data.name, data.id_phase, {
         name: 'Campaign',
         channel: channel,
         url: '',
         description: checkCampaign.campaign_name
-      }
-
-      const createTicket = await this.workflowService.createTicket(company, name, id_phase, origin)
+      })
 
       console.log('🚀 ~ WorkflowController ~ createTicket ~ createTicket:', createTicket)
 
@@ -109,24 +136,27 @@ export default class WorkflowController {
         console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
         return false
       }
-      await this.workflowService.linkCustomer(company, createTicket.id, crm.template, crm.table, crm.column, String(crm.id_crm))
 
-      if (negotiation) {
-        this.#createNegotiation(company, tenantID, crm.id_crm, createTicket.id_seq, negotiation)
+      if (data.campaign_type == 'crm') {
+        await this.workflowService.linkCustomer(data.company, createTicket.id, data.crm.template, data.crm.table, data.crm.column, String(data.crm.id_crm))
       }
 
-      if (message) {
-        this.messageController.sendMessage(company, tenantID, createTicket, crm, message)
+      if (data.negotiation) {
+        this.#createNegotiation(data.company, data.tenantID, data.crm.id_crm, createTicket.id_seq, data.negotiation)
       }
 
-      if (end_date) {
-        this.workflowService.setSLA(company, createTicket.id, id_workflow, checkCampaign.end_date)
+      if (data.message) {
+        const payload = this.#buildMessagePayload(getDetailsCompany, checkCampaign, createTicket, channel_id, data)
+        this.messageController.sendMessage(payload)
+      }
+
+      if (data.end_date) {
+        this.workflowService.setSLA(data.company, createTicket.id, data.id_workflow, checkCampaign.end_date)
       }
 
       RabbitMQService.sendToExchangeQueue(`automation:events:${getDetailsCompany.name}`, `automation:events:${getDetailsCompany.name}`, {
         event: 'create_ticket',
         id_ticket: createTicket.id,
-        origin
       })
 
       return true
@@ -134,6 +164,30 @@ export default class WorkflowController {
       console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', err)
     }
   }
+
+  #buildMessagePayload(getDetailsCompany, checkCampaign, ticket, channel_id, data) {
+    return {
+      company: {
+        id: getDetailsCompany.id,
+        name: getDetailsCompany.name,
+        token: getDetailsCompany.token,
+      },
+      tenantID: data.tenantID,
+      ticket,
+      crm: data.crm,
+      message: data.message,
+      contato: data.contato,
+      req_user_id: data.created_by,
+      channel: {
+        id: channel_id,
+        token: checkCampaign.first_message[0]?.channel_token,
+        broker_id: checkCampaign.first_message[0]?.id_broker,
+      },
+      workflow_id: data.id_workflow,
+      hsm_id: checkCampaign.first_message[0]?.hsm_id,
+    };
+  }
+  
 
   async #checkOpenTickets(company, id_crm) {
     try {
