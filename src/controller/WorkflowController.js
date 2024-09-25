@@ -113,11 +113,13 @@ export default class WorkflowController {
       const getDetailsCompany = await this.companyService.getBytoken(data.company)
 
       if (data.ignore_open_tickets) {
+        // TODO: Acho que esse código pode dar problema se for verificar apenas pelo id_crm.
+        //  Por ser ID sequencial e cada cliente ter seu prórprio ID sequencial, pode ser que o id '4' por exemplo, exista em mais de um cliente.
         const checkOpenTickets = await this.#checkOpenTickets(data.company, data.crm.id_crm)
         if (checkOpenTickets) return true
       }
+
       const channel_id = checkCampaign.first_message[0]?.id_channel
-     
       if(!channel_id) {
         throw new Error('Channel not found')
       }
@@ -130,10 +132,8 @@ export default class WorkflowController {
         description: checkCampaign.campaign_name
       })
 
-      console.log('🚀 ~ WorkflowController ~ createTicket ~ createTicket:', createTicket)
-
       if (!createTicket.id) {
-        console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', createTicket)
+        console.error('[WorkflowController | createTicket] Erro na criação do ticket: ', createTicket)
         return false
       }
 
@@ -150,18 +150,14 @@ export default class WorkflowController {
         this.messageController.sendMessage(payload)
       }
 
-      if (data.end_date) {
-        this.workflowService.setSLA(data.company, createTicket.id, data.id_workflow, checkCampaign.end_date)
-      }
-
-      RabbitMQService.sendToExchangeQueue(`automation:events:${getDetailsCompany.name}`, `automation:events:${getDetailsCompany.name}`, {
+      RabbitMQService.sendToExchangeQueue(`campaign:events:${getDetailsCompany.name}`, `campaign:events:${getDetailsCompany.name}`, {
         event: 'create_ticket',
-        id_ticket: createTicket.id,
+        data: createTicket,
       })
 
       return true
     } catch (err) {
-      console.log('🚀 ~ WorkflowController ~ createTicket ~ err:', err)
+      console.error('[WorkflowController | createTicket] CATCH: ', err)
     }
   }
 
@@ -184,7 +180,7 @@ export default class WorkflowController {
         broker_id: checkCampaign.first_message[0]?.id_broker,
       },
       workflow_id: data.id_workflow,
-      hsm_id: checkCampaign.first_message[0]?.hsm_id,
+      hsm: checkCampaign.first_message[0]?.hsm,
     };
   }
   

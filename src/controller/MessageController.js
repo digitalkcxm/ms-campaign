@@ -30,22 +30,21 @@ export default class MessageController {
         )
         data.message.message = messageFormatted
       }
-      const queueMessages = this.#createPhonesMsgPayload(
-        data,
-        phones,
-        variables
-      )
+      
+      const queueMessages = this.#createPhonesMsgPayload(data, phones, variables)
       this.#sendToCampaignQueue(data.company, queueMessages)
+      
       return true
     } catch (err) {
-      console.log("🚀 ~ MessageController ~ sendMessage ~ err:", err)
+      console.error('[MessageController | sendMessage] Erro ao enviar mensagem: ', err)
+      return false
     }
   }
 
   #createPhonesMsgPayload(data, phones, variables) {
     if (!phones || phones.length == 0) return []
 
-    const { ticket, channel, message, hsm_id, subject } = data
+    const { ticket, channel, message, hsm, subject } = data
     return phones.map((phone) => {
       return {
         ticket_id: ticket.id,
@@ -55,8 +54,10 @@ export default class MessageController {
         contact: phone,
         message: message.message,
         subject: subject || '',
-        hsm_template_message_id: hsm_id || '',
-        hsm_variables: variables,
+        hsm: {
+          ...hsm,
+          variables: variables || hsm?.variables
+        }
       }
     })
   }
