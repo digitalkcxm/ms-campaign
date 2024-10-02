@@ -25,7 +25,7 @@ export default class MessageController {
           crm.id_crm,
           company.id,
           message.message,
-          ticket.id,
+          ticket,
           tenantID
         )
         data.message.message = messageFormatted
@@ -47,7 +47,7 @@ export default class MessageController {
     const { ticket, channel, message, hsm, subject } = data
     return phones.map((phone) => {
       return {
-        ticket_id: ticket.id,
+        ticket: ticket,
         channel_id: channel.id,
         channel_token: channel.token,
         broker_id: channel.broker_id,

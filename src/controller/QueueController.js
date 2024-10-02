@@ -78,8 +78,6 @@ export default class QueueController {
         const message = msg.content.toString()
         const result = JSON.parse(message)
 
-        console.log('🚀 ~ QueueController ~ campaignCreateTicket ~ msg:', result)
-
         if (result.type == 'update_status_campaign') {
           process = await this.campaignController.updateStatusCampaign(result.company, result.id_campaign, result.id_campaign_version, result.status)
         } else {
