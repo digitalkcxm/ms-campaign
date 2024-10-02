@@ -150,7 +150,7 @@ export default class WorkflowController {
         this.messageController.sendMessage(payload)
       }
 
-      RabbitMQService.sendToExchangeQueue(`campaign:events:${getDetailsCompany.name}`, `campaign:events:${getDetailsCompany.name}`, {
+      RabbitMQService.sendToQueue(`campaign:events:${getDetailsCompany.name}`, {
         event: 'create_ticket',
         data: createTicket,
       })
