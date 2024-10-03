@@ -28,14 +28,13 @@ export default class CRMController {
 
       return removeDuplicate
     } catch (err) {
-      console.log('🚀 ~ file: CRMController.js:12 ~ CRMController ~ getContact ~ err:', err)
+      console.error('[CRMController | getContact]', err)
     }
   }
 
   async getDataCRM(token, tenant_id, table, column, id_crm, get_table, get_column) {
     try {
       const result = await CRMManagerService.getDataCRM(token, tenant_id, get_table, table, column, id_crm)
-
       if (!result) return false
 
       const resultFilterData = result[0].filter(data => {

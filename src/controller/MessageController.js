@@ -16,47 +16,49 @@ export default class MessageController {
         MapIDs_ChannelNameEnum[data.channel.id] === ChannelNameEnum.Whatsapp &&
         MapIDs_BrokerNameEnum[data.channel.broker_id] == BrokerWhatsappNameEnum.Gupshup
       ) {
-        variables = this.#getVariables(data)
+        variables = await this.#getVariables(data)
+
       } else {
         const { company, crm, ticket, tenantID, message } = data
         const messageFormatted = await this.#formatMessage(
           crm.table,
           crm.column,
           crm.id_crm,
-          company.id,
+          company.token,
           message.message,
-          ticket.id,
+          ticket,
           tenantID
         )
         data.message.message = messageFormatted
       }
-      const queueMessages = this.#createPhonesMsgPayload(
-        data,
-        phones,
-        variables
-      )
+      
+      const queueMessages = this.#createPhonesMsgPayload(data, phones, variables)
       this.#sendToCampaignQueue(data.company, queueMessages)
+      
       return true
     } catch (err) {
-      console.log("🚀 ~ MessageController ~ sendMessage ~ err:", err)
+      console.error('[MessageController | sendMessage] Erro ao enviar mensagem: ', err)
+      return false
     }
   }
 
   #createPhonesMsgPayload(data, phones, variables) {
     if (!phones || phones.length == 0) return []
 
-    const { ticket, channel, message, hsm_id, subject } = data
+    const { ticket, channel, message, hsm, subject } = data
     return phones.map((phone) => {
       return {
-        ticket_id: ticket.id,
+        ticket: ticket,
         channel_id: channel.id,
         channel_token: channel.token,
         broker_id: channel.broker_id,
         contact: phone,
         message: message.message,
         subject: subject || '',
-        hsm_template_message_id: hsm_id || '',
-        hsm_variables: variables,
+        hsm: {
+          ...hsm,
+          variables: variables || hsm?.variables
+        }
       }
     })
   }
@@ -69,7 +71,7 @@ export default class MessageController {
       if (contactField.type == "crm" && !data.contato) {
         const { template, table, column, id_crm } = data.crm
         phones = await crmController.getContact(
-          data.company.id,
+          data.company.token,
           data.tenantID,
           contactField.data[1],
           table,
@@ -91,20 +93,18 @@ export default class MessageController {
   async #getVariables(data) {
     let variables = {}
 
-    const { message, company, tenantID } = data
+    const { hsm, ticket, company, tenantID } = data
     const { table, column, id_crm } = data.crm
 
-    if (message.variables) {
-      const keysVariables = Object.keys(message.variables)
+    if (hsm?.variable) {
+      const keysVariables = Object.keys(hsm.variable)
 
       for (const keyVariable of keysVariables) {
-        const resultGetVariable = this.#getVariable(
-          message.variables[keyVariable]
-        )
+        const resultGetVariable = this.#getVariableType(hsm.variable[keyVariable])
 
         if (resultGetVariable.type == "crm") {
           const resultGetCRM = await crmController.getDataCRM(
-            company.id,
+            company.token,
             tenantID,
             table,
             column,
@@ -409,10 +409,20 @@ export default class MessageController {
         data,
       }
     } catch (err) {
-      console.log(
-        "🚀 ~ file: InteractionController.js:78 ~ InteractionController ~ #getVariable ~ err:",
-        err
-      )
+      console.error('[MessageController | #getVariable] ', err)
+    }
+  }
+
+  #getVariableType(variable) {
+    try {
+      const data = variable.split(".")
+      return {
+        type: data[0],
+        data,
+      }
+      
+    } catch (err) {
+      console.error('[MessageController | #getVariableType] ', err)
     }
   }
 
@@ -420,7 +430,7 @@ export default class MessageController {
     table,
     column,
     id_crm,
-    company,
+    company_token,
     message,
     ticketVariables,
     tenantID
@@ -440,7 +450,7 @@ export default class MessageController {
 
           if (obj.key.type == "crm") {
             const resultGetCRM = await crmController.getDataCRM(
-              company,
+              company_token,
               tenantID,
               table,
               column,
