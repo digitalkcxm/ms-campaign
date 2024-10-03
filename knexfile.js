@@ -18,6 +18,22 @@ export default {
     }
   },
 
+  homol: {
+    client: 'postgresql',
+    connection: {
+      host: process.env.DB_HOST,
+      database: process.env.DB_DATABASE,
+      user: process.env.DB_USERNAME,
+      password: process.env.DB_PASSWORD
+    },
+    migrations: {
+      directory: './src/config/database/migrations'
+    },
+    seeds: {
+      directory: './src/config/database/seeds'
+    }
+  },
+
   staging: {
     client: 'postgresql',
     connection: {
