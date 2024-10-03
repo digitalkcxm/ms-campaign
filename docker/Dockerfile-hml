@@ -1,0 +1,15 @@
+FROM public.ecr.aws/docker/library/node:18.19.0-alpine
+
+RUN mkdir -p /usr/src/app
+
+WORKDIR /usr/src/app
+
+COPY . .
+
+RUN npm install
+
+RUN npm run migrate:latest
+
+EXPOSE  80
+
+CMD ["node", "src/index.js"]
