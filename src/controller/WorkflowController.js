@@ -110,7 +110,6 @@ export default class WorkflowController {
       const checkCampaign = await this.campaignVersionController.getByID(data.id_campaign_version)
       if (checkCampaign.id_status == status.canceled || checkCampaign.id_status == status.draft || checkCampaign.id_status == status.finished) return true
 
-      const getDetailsCompany = await this.companyService.getBytoken(data.company)
 
       if (data.ignore_open_tickets) {
         // TODO: Acho que esse código pode dar problema se for verificar apenas pelo id_crm.
@@ -145,6 +144,7 @@ export default class WorkflowController {
         this.#createNegotiation(data.company, data.tenantID, data.crm.id_crm, createTicket.id_seq, data.negotiation)
       }
 
+      const getDetailsCompany = await this.companyService.getBytoken(data.company)
       if (data.message) {
         const payload = this.#buildMessagePayload(getDetailsCompany, checkCampaign, createTicket, channel_id, data)
         this.messageController.sendMessage(payload)
