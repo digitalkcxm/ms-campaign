@@ -2,7 +2,7 @@ import axios from 'axios'
 import AppVariables from '../config/appVariables.js'
 
 export default class CRMManagerService {
-  static async query(company, tenantID, filter) {
+  static async getLeadsByFilter(company, tenantID, filter) {
     try {
       const data = {}
 
