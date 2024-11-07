@@ -51,30 +51,6 @@ export default class WorkflowService {
     }
   }
 
-  async setSLA(Authorization, id_ticket, id_workflow, limit_interaction) {
-    try {
-      const result = await axios.request({
-        method: 'put',
-        maxBodyLength: Infinity,
-        url: `${AppVariables.MSWorkflow()}/api/v1/ticket/sla`,
-        headers: {
-          Authorization,
-          'Content-Type': 'application/json'
-        },
-        data: {
-          id_ticket,
-          id_workflow,
-          limit_interaction: String(moment(limit_interaction).add(3, 'hours').format()),
-          id_user: '0'
-        }
-      })
-
-      return result.data
-    } catch (err) {
-      return err.response.data
-    }
-  }
-
   async checkOpenTickets(Authorization, id_crm) {
     try {
       const result = await axios.request({
