@@ -33,7 +33,7 @@ export const ChannelNameEnum = {
   Chat: 'Chat',
 }
 
-export const MapIDs_ChannelNameEnum = {
+export const ChannelEnumIDs = {
   1: ChannelNameEnum.Chat,
   2: ChannelNameEnum.Whatsapp,
   3: ChannelNameEnum.SMS,
@@ -59,7 +59,8 @@ export const MapIDs_BrokerNameEnum = {
 }
 
 export const ActionTypeEnum = {
-  CreateLead: 'CreateLead',
-  ExecuteCampaign: 'ExecuteCampaign',  
-  UpdateStatusCampaign: 'UpdateStatusCampaign',
+  CreateLead: 'CreateLeadAction',
+  SendMessage: 'SendMessageAction',  
+  PreProcessCampaign: 'PreProcessCampaignAction',  
+  UpdateStatusCampaign: 'UpdateStatusCampaignAction',
 }

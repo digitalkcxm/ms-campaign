@@ -9,8 +9,7 @@ export default class QueueController {
     this.redis = redis
 
     this.campaignController = new CampaignController(database, logger)
-    this.workflowController = new WorkflowController(database, logger)
-    this.ActionFactory = new HandlersFactory(database, redis, logger)
+    this.workflowController = new WorkflowController(database, logger)    
   }
 
   async campaignScheduling(rabbit) {
@@ -38,7 +37,7 @@ export default class QueueController {
         
         // Instancia o handler correto
         const eventType = incomingEvent?.type || 'unknown'
-        const ActionHandler = this.ActionFactory.create(eventType)
+        const ActionHandler = HandlersFactory.create(eventType, this.database, this.redis, this.logger)
         if(!ActionHandler) {
           console.error(`[QueueController | campaignScheduling] ActionHandler not found for event type: ${eventType}`, msg.content.toString())
           rabbit.nack(msg, false, false)
@@ -62,11 +61,11 @@ export default class QueueController {
   async campaignCreateTicket(rabbit) {
     const MAX_RETRY_ATTEMPTS = 3
 
-    const queue_name = 'campaign_create_ticket'
-    const queue_name_binded = 'campaign_create_ticket'
-    const queue_dead_name = 'dead_campaign_create_ticket'
-    const exchange_dead_name = 'dead_campaign_create_ticket'
-    const exchange_name = 'campaign_create_ticket'
+    const queue_name = 'campaign_execution'
+    const queue_name_binded = 'campaign_execution'
+    const queue_dead_name = 'dead_campaign_execution'
+    const exchange_dead_name = 'dead_campaign_execution'
+    const exchange_name = 'campaign_execution'
 
     try {
       rabbit.assertQueue(queue_dead_name, { durable: true })
@@ -87,7 +86,7 @@ export default class QueueController {
 
         // Instancia o handler correto
         const eventType = incomingEvent?.type || 'unknown'
-        const ActionHandler = this.ActionFactory.create(eventType)
+        const ActionHandler = HandlersFactory.create(eventType, this.database, this.redis, this.logger)
         if(!ActionHandler) {
           console.error(`[QueueController | campaignCreateTicket] ActionHandler not found for event type: ${eventType}`, msg.content.toString())
           rabbit.nack(msg, false, false)

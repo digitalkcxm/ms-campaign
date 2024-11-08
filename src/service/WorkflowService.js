@@ -1,36 +1,45 @@
+/* eslint-disable no-undef */
+
 import axios from 'axios'
-import moment from 'moment'
 import AppVariables from '../config/appVariables.js'
+import { serviceError, sucess } from '../helper/patterns/ReturnPatters.js'
 
 export default class WorkflowService {
   constructor(logger = {}) {
     this.logger = logger
   }
 
-  async createTicket(Authorization, name, id_phase, origin, responsibles = []) {
+  async createTicket(
+    Authorization,
+    payload = {
+      name,
+      id_phase,
+      origin,
+      responsibles
+    }
+  ) {
     try {
+
+      payload.responsibles = (payload?.responsibles?.length) ? payload.responsibles : []
+
       const result = await axios.request({
         method: 'post',
         maxBodyLength: Infinity,
         url: `${AppVariables.MSWorkflow()}/api/v1/ticket`,
         headers: { Authorization, 'Content-Type': 'application/json' },
-        data: {
-          name,
-          id_user: 0,
-          id_phase,
-          responsibles,
-          origin
-        }
+        data: payload
       })
 
-      return result.data
+      return sucess({ data: result.data })
     } catch (err) {
-      return err.response.data
+      return serviceError(err)
     }
   }
 
-  async linkCustomer(Authorization, id_ticket, template, table, column, id_crm) {
+  async linkCustomer(Authorization, id_ticket, linkPayload = { template, table, column, id_crm }) {
     try {
+      if(!linkPayload) return sucess({ data: null })
+
       const result = await axios.request({
         method: 'post',
         maxBodyLength: Infinity,
@@ -38,16 +47,13 @@ export default class WorkflowService {
         headers: { Authorization, 'Content-Type': 'application/json' },
         data: {
           id_ticket,
-          id_crm,
-          table,
-          column,
-          template
+          ...linkPayload
         }
       })
 
-      return result.data
+      return sucess({ data: result.data })
     } catch (err) {
-      return err.response.data
+      return serviceError(err)
     }
   }
 

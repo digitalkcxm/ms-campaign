@@ -18,7 +18,7 @@ export default (database, logger, redis) => {
   router.get('/', async (req, res, next) => {
     try {
       let { search, status, size, page } = req.query
-      if(status) status = JSON.parse(status)
+      if (status) status = JSON.parse(status)
 
       const result = await campaignController.getAll(req.company, search, status, size, page)
 
@@ -49,8 +49,24 @@ export default (database, logger, redis) => {
       const XTenantID = req.headers['x-tenant-id']
 
       const { name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, fileUrl } = req.body
-
-      const result = await campaignController.create(req.company, XTenantID, name, create_by, id_workflow, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, fileUrl)
+      const result = await campaignController.createCampaign({
+        company: req.company,
+        tenantID: XTenantID,
+        name: name,
+        created_by: create_by,
+        id_workflow: id_workflow,
+        draft: draft,
+        repeat: repeat,
+        start_date: start_date,
+        repetition_rule: repetition_rule,
+        filter: filter,
+        end_date: end_date,
+        id_phase: id_phase,
+        ignore_open_tickets: ignore_open_tickets,
+        first_message: first_message,
+        negotiation: negotiation,
+        file_url: fileUrl
+      })
 
       return res.status(201).json(result)
     } catch (err) {

@@ -1,24 +1,21 @@
 import { ActionTypeEnum } from '../model/Enumerations.js'
 import CreateLeadActionHandler from './handlers/CreateLeadActionHandler.js'
-import ExecuteCampaignActionHandler from './handlers/ExecuteCampaignActionHandler.js'
+import PreProcessCampaignActionHandler from './handlers/PreProcessCampaignActionHandler.js'
+import MessageSenderActionHandler from './handlers/MessageSenderActionHandler.js'
 import UpdateStatusCampaignActionHandler from './handlers/UpdateStatusCampaign.js'
 
 export default class HandlersFactory {
 
-  constructor(database, redis, logger) {
-    this.database = database
-    this.redis = redis
-    this.logger = logger
-  }
-
-  create(actionType) {
+  static create(actionType, database, redis, logger) {
     switch (actionType) {
-    case ActionTypeEnum.ExecuteCampaign:
-      return new ExecuteCampaignActionHandler(this.database, this.redis, this.logger)
+    case ActionTypeEnum.PreProcessCampaign:
+      return new PreProcessCampaignActionHandler(database, redis, logger)
     case ActionTypeEnum.UpdateStatusCampaign:
-      return new UpdateStatusCampaignActionHandler(this.database, this.redis, this.logger)
+      return new UpdateStatusCampaignActionHandler(database, redis, logger)
     case ActionTypeEnum.CreateLead:
-      return new CreateLeadActionHandler(this.database, this.redis, this.logger)
+      return new CreateLeadActionHandler(database, redis, logger)
+    case ActionTypeEnum.SendMessage:
+      return new MessageSenderActionHandler(database, redis, logger)
     default:
       return null
     }

@@ -71,7 +71,7 @@ export default class CampaignVersionController {
       const schedulerInMilliseconds = scheduledDate.diff(now)
 
       const campaignPayloadScheduler = {
-        type: ActionTypeEnum.ExecuteCampaign,
+        type: ActionTypeEnum.PreProcessCampaign,
         company_id,
         campaign_id,
         campaign_version_id
