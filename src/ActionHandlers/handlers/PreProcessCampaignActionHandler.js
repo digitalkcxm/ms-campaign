@@ -10,10 +10,10 @@ import CRMManagerService from '../../service/CRMManagerService.js'
 import RabbitMQService from '../../service/RabbitMQService.js'
 import IActionHandler from '../abstracts/IActionHandler.js'
 
-export default class ExecuteCampaignActionHandler extends IActionHandler {
+export default class PreProcessCampaignActionHandler extends IActionHandler {
 
   constructor(database, redis, logger) {
-    super('ExecuteCampaignActionHandler')
+    super('PreProcessCampaign')
 
     this.controllers = {
       campaign: () => new CampaignController(database, logger),
@@ -64,7 +64,7 @@ export default class ExecuteCampaignActionHandler extends IActionHandler {
       }
 
 
-      const LeadsPreProcessed = await this.#PreProcessLeads(campaignInfo, company, Leads.data.result, Leads.data.isMailing)
+      const LeadsPreProcessed = await this.#PreProcessLeads(campaignInfo, company, Leads.data.result)
       if (!LeadsPreProcessed.ok) {
         console.error(`[${this.actionName}.handleAction] Error PreProcessing Leads`, LeadsPreProcessed)
         await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.error)
@@ -99,7 +99,7 @@ export default class ExecuteCampaignActionHandler extends IActionHandler {
     ])
   }
 
-  async #PreProcessLeads(campaignInfo, company, leads, isMailing = false) {
+  async #PreProcessLeads(campaignInfo, company, leads) {
     try {
 
       let newListLeads = []
@@ -144,7 +144,7 @@ export default class ExecuteCampaignActionHandler extends IActionHandler {
           id_crm: lead.id
         } : null
 
-        await RabbitMQService.sendToExchangeQueue('campaign_create_ticket', 'campaign_create_ticket', {
+        await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
           type: ActionTypeEnum.CreateLead,
           company: company,
           campaign_id: campaignInfo.id,
@@ -166,7 +166,7 @@ export default class ExecuteCampaignActionHandler extends IActionHandler {
         })
       }
 
-      await RabbitMQService.sendToExchangeQueue('campaign_create_ticket', 'campaign_create_ticket', {
+      await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
         type: ActionTypeEnum.UpdateStatusCampaign,
         company: company,
         campaign_id: campaignInfo.id,
