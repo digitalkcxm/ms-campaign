@@ -1,6 +1,6 @@
 import CampaignController from '../../controller/CampaignController.js'
 import GetLeads from '../../helper/GetLeads.js'
-import { error, sucess } from '../../helper/patterns/ReturnPatters.js'
+import { error, success } from '../../helper/patterns/ReturnPatters.js'
 import CampaignModel from '../../model/CampaignModel.js'
 import CampaignVersionModel from '../../model/CampaignVersionModel.js'
 import CompanyModel from '../../model/CompanyModel.js'
@@ -116,7 +116,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
         }))
       }
 
-      return sucess({ data: newListLeads })
+      return success({ data: newListLeads })
 
 
       // TODO: Implementar a logica em cima da negociacao

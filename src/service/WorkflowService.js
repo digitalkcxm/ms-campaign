@@ -2,7 +2,7 @@
 
 import axios from 'axios'
 import AppVariables from '../config/appVariables.js'
-import { serviceError, sucess } from '../helper/patterns/ReturnPatters.js'
+import { serviceError, success } from '../helper/patterns/ReturnPatters.js'
 
 export default class WorkflowService {
   constructor(logger = {}) {
@@ -30,7 +30,7 @@ export default class WorkflowService {
         data: payload
       })
 
-      return sucess({ data: result.data })
+      return success({ data: result.data })
     } catch (err) {
       return serviceError(err)
     }
@@ -38,7 +38,7 @@ export default class WorkflowService {
 
   async linkCustomer(Authorization, id_ticket, linkPayload = { template, table, column, id_crm }) {
     try {
-      if(!linkPayload) return sucess({ data: null })
+      if(!linkPayload) return success({ data: null })
 
       const result = await axios.request({
         method: 'post',
@@ -51,7 +51,7 @@ export default class WorkflowService {
         }
       })
 
-      return sucess({ data: result.data })
+      return success({ data: result.data })
     } catch (err) {
       return serviceError(err)
     }

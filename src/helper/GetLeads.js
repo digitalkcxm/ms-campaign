@@ -1,7 +1,7 @@
 import CRMManagerService from '../service/CRMManagerService.js'
 import S3 from '../config/S3.js'
 import { URL } from 'url'
-import { sucess } from './patterns/ReturnPatters.js'
+import { success } from './patterns/ReturnPatters.js'
 import { error } from 'console'
 
 export default async function GetLeads(campaignInfo, company) {
@@ -43,7 +43,7 @@ async function GetLeadByMailing(campaignInfo) {
     }
   }
 
-  return sucess({
+  return success({
     data: {
       isMaiging: true,
       result: leads
@@ -54,7 +54,7 @@ async function GetLeadByMailing(campaignInfo) {
 async function GetLeadByCRM(authToken, tenantID, filter) {
   try {
     const result = await CRMManagerService.getLeadsByFilter(authToken, tenantID, filter)
-    return sucess({
+    return success({
       data: {
         isMaiging: false,
         result: result

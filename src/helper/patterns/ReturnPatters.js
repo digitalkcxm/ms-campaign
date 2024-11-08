@@ -1,9 +1,9 @@
-function sucess({ code, data, message }) {
+function success({ code, data, message }) {
   return {
     ok: true,
-    code: code || 200,      // Código de sucesso se caso tiver retornando para o cliente
+    code: code || 200,      // Código de successo se caso tiver retornando para o cliente
     data,                   // Objeto de retorno
-    message                 // Mensagem de sucesso que será exibida para o cliente
+    message                 // Mensagem de successo que será exibida para o cliente
   }
 }
 
@@ -28,4 +28,4 @@ function serviceError(err) {
   })
 }
 
-export { sucess, error, apiResponse, serviceError }
+export { success, error, apiResponse, serviceError }
