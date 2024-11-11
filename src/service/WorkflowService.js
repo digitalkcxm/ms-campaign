@@ -1,5 +1,3 @@
-/* eslint-disable no-undef */
-
 import axios from 'axios'
 import AppVariables from '../config/appVariables.js'
 import { serviceError, success } from '../helper/patterns/ReturnPatters.js'

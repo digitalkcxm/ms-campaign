@@ -4,10 +4,11 @@ import { error, success } from '../../helper/patterns/ReturnPatters.js'
 import CampaignModel from '../../model/CampaignModel.js'
 import CampaignVersionModel from '../../model/CampaignVersionModel.js'
 import CompanyModel from '../../model/CompanyModel.js'
-import { ActionTypeEnum, status } from '../../model/Enumerations.js'
+import { ActionTypeEnum, ChannelEnumIDs, status } from '../../model/Enumerations.js'
 import CompanyService from '../../service/CompanyService.js'
 import CRMManagerService from '../../service/CRMManagerService.js'
 import RabbitMQService from '../../service/RabbitMQService.js'
+import WorkflowServiceV2 from '../../service/WorkflowServiceV2.js'
 import IActionHandler from '../abstracts/IActionHandler.js'
 
 export default class PreProcessCampaignActionHandler extends IActionHandler {
@@ -27,15 +28,16 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
 
     this.services = {
       company: new CompanyService(redis),
+      workflow: new WorkflowServiceV2(logger),
     }
   }
 
   async handleAction({ company_id, campaign_id, campaign_version_id }) {
     try {
       const checkCampaign = await this.models.campaign.getByID(company_id, campaign_id)
-      if ([status.canceled, status.draft, status.finished].includes(checkCampaign[0].status)) {
-        return true
-      }
+      // if ([status.canceled, status.draft, status.finished].includes(checkCampaign[0].status)) {
+      //   return true
+      // }
 
       // Atualiza os status da campanha e da versão da campanha
       await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.running)
@@ -63,19 +65,24 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
         return true
       }
 
-
       const LeadsPreProcessed = await this.#PreProcessLeads(campaignInfo, company, Leads.data.result)
       if (!LeadsPreProcessed.ok) {
         console.error(`[${this.actionName}.handleAction] Error PreProcessing Leads`, LeadsPreProcessed)
         await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.error)
         return false
       }
+      
+      const LeadsCriados = await this.#CreateLeads(company, campaignInfo, LeadsPreProcessed.data)
+      if(!LeadsCriados.ok) {
+        console.error(`[${this.actionName}.handleAction] Error Creating Leads`, LeadsCriados)
+        await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.error)
+        return false
+      }
 
+      await this.models.campaign.update(campaign_id, { total: LeadsCriados.data.length })
+      await this.#SendToPreProcessMessage(company, campaignInfo, LeadsCriados.data)
 
-      await this.models.campaign.update(campaign_id, { total: LeadsPreProcessed.data.length })
-      await this.#SendToQueueCreateTicket(company, campaignInfo, LeadsPreProcessed.data)
       return true
-
     } catch (err) {
       console.error(`[${this.actionName}.handleAction] Catch Error: `, err)
       return false
@@ -136,38 +143,21 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
     }
   }
 
-  async #SendToQueueCreateTicket(company, campaignInfo, LeadsPreProcessed) {
+  async #SendToPreProcessMessage(company, campaignInfo, leadsCreated) {
     try {
-      const getTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company, campaignInfo.id_tenant)
-
-      for (let lead of LeadsPreProcessed) {
-
-        const customerLink = (lead?.id) ? {
-          template: getTemplate.id,
-          table: getTemplate.table,
-          column: 'id',
-          id_crm: lead.id
-        } : null
-
+ 
+      for(const lead of leadsCreated) {
         await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
-          type: ActionTypeEnum.CreateLead,
+          type: ActionTypeEnum.SendMessage,
           company: company,
           campaign_id: campaignInfo.id,
           campaign_version_id: campaignInfo.campaign_version_id,
           data: {
-            name: lead.nome,
-            id_phase: campaignInfo.id_phase,
-            id_workflow: campaignInfo.id_workflow,
-            lead: lead,
+            ticket: lead.ticket,
+            customer: lead.customer,
+            business: lead.business,
             triggers: lead.contatos,
-            automation_message: lead.message,
-            business: null, // TODO: precisa implementar o pre-processamento
-            customer: customerLink,
-            tenantID: campaignInfo.id_tenant,
-            ignore_open_tickets: campaignInfo.ignore_open_tickets,
-            created_by: campaignInfo.created_by,
-            end_date: campaignInfo.end_date,
-            campaign_type: campaignInfo.file_url ? 'file' : 'crm',
+            automation_message: lead.automation_message,
           }
         })
       }
@@ -187,6 +177,42 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
       console.error(`[${this.actionName}.#SendToQueueCreateTicket] Catch Error: `, err)
       return false
     }
+  }
+
+  async #CreateLeads(company, campaignInfo, LeadsPreProcessed) {
+    const {
+      id_workflow,
+      id_phase,
+      ignore_open_tickets,
+      name: campaign_name
+    } = campaignInfo
+
+    const { id_channel } = campaignInfo.first_message[0]
+    const channel = ChannelEnumIDs[id_channel]
+
+    const customerTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company.token, campaignInfo.id_tenant)
+    const leadsCreated = await this.services.workflow.CreateTickets({
+      id_workflow, 
+      id_phase, 
+      ignore_open_tickets, 
+      campaign_name,
+      is_mailing: !!campaignInfo.file_url, 
+      leads: LeadsPreProcessed,
+      customerTemplate,
+      origin_channel: channel
+    })
+    if(!leadsCreated.ok) {
+      return leadsCreated
+    }
+
+    for(let lead of leadsCreated.data) {
+      await RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
+        event: 'create_ticket',
+        data: lead.ticket,
+      })
+    }
+
+    return leadsCreated
   }
 }
 

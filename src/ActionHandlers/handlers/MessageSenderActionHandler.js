@@ -22,7 +22,6 @@ export default class MessageSenderActionHandler extends IActionHandler {
   }
 
 
-  // PARAR EXECUÇAO PARA REVISAO DO FLUXO
   async handleAction({ company, data }) {
     try {
       const {
@@ -90,32 +89,32 @@ export default class MessageSenderActionHandler extends IActionHandler {
     try {
       const channelBroker = GetChannelBroker(channel_id, broker_id)
       switch (channelBroker) {
-        case ChannelBrokerEnum.EmailImap:
-          return success({
-            data: {
-              // subject: '', 
-              to: trigger,
-              cc: '',
-              bcc: '',
+      case ChannelBrokerEnum.EmailImap:
+        return success({
+          data: {
+            // subject: '', 
+            to: trigger,
+            cc: '',
+            bcc: '',
+          }
+        })
+      case ChannelBrokerEnum.WhatsappOficial:
+        return success({
+          data: {
+            hsm: {
+              type: automation_message?.hsm?.type || 'text',
+              file: automation_message?.hsm?.file,
+              whatsapp_id: automation_message?.hsm?.whatsapp_id,
+              template_message_id: automation_message?.hsm?.value,
+              phrase: automation_message?.hsm?.phrase,
+              language: automation_message?.hsm?.language || 'pt_BR',
+              variables: this.#getHSMVariables(automation_message, ticket, customer, business),
             }
-          })
-        case ChannelBrokerEnum.WhatsappOficial:
-          return success({
-            data: {
-              hsm: {
-                type: automation_message?.hsm?.type || 'text',
-                file: automation_message?.hsm?.file,
-                whatsapp_id: automation_message?.hsm?.whatsapp_id,
-                template_message_id: automation_message?.hsm?.value,
-                phrase: automation_message?.hsm?.phrase,
-                language: automation_message?.hsm?.language || 'pt_BR',
-                variables: this.#getHSMVariables(automation_message, ticket, customer, business),
-              }
-            }
-          })
+          }
+        })
 
-        default:
-          return success({ data: {} })
+      default:
+        return success({ data: {} })
       }
     } catch (err) {
       console.error(`[${this.actionName}.#GetChannelDetails]`, err)
