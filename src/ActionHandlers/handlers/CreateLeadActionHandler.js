@@ -30,7 +30,7 @@ export default class CreateLeadActionHandler extends IActionHandler {
 
       // Verifica se o lead possui atendimentos abertos
       if (data.ignore_open_tickets) {
-        const hasOpenTickets = await this.#hasOpenTickets(data.company, data.crm)
+        const hasOpenTickets = await this.#hasOpenTickets(data.company, data.customer)
         if (hasOpenTickets) return true
       }
 
@@ -39,7 +39,7 @@ export default class CreateLeadActionHandler extends IActionHandler {
         return false
       }
 
-      const sendMessage = await this.#sendMessage(company, campaign_id, campaign_version_id, Ticket, data)
+      const sendMessage = await this.#sendMessage(company, campaign_id, campaign_version_id, Ticket.data, data)
       if (!sendMessage.ok) {
         return false
       }
@@ -54,8 +54,8 @@ export default class CreateLeadActionHandler extends IActionHandler {
   async #createTicket(company, campaignInfo, data) {
     try {
 
-      const { channel_id } = data.message[0]
-      const channel = ChannelEnumIDs[channel_id]
+      const { id_channel } = data.automation_message
+      const channel = ChannelEnumIDs[id_channel]
 
       const ticketPayload = {
         name: data.name,
@@ -75,19 +75,19 @@ export default class CreateLeadActionHandler extends IActionHandler {
         return false
       }
 
-      await this.services.workflow.linkCustomer(company.token, createTicket.data.id, data.crm)
+      await this.services.workflow.linkCustomer(company.token, createTicket.data.id, data.customer)
 
       const ticket = {
         ...createTicket.data,
-        customer: (data.crm) ? {
+        customer: (data.customer) ? {
           id_ticket: createTicket.data.id,
-          ...data.crm
+          ...data.customer
         } : null
       }
 
       // TODO: Implementar a negociação
       // if (data.negotiation) {
-      //   this.#createNegotiation(data.company, data.tenantID, data.crm.id_crm, createTicket.id_seq, data.negotiation)
+      //   this.#createNegotiation(data.company, data.tenantID, data.customer.id_crm, createTicket.id_seq, data.negotiation)
       // }
 
       RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
@@ -102,37 +102,35 @@ export default class CreateLeadActionHandler extends IActionHandler {
     }
   }
 
-  async #sendMessage(company, campaign_id, campaign_version_id, Ticket, data) {
+  async #sendMessage(company, campaign_id, campaign_version_id, ticket, data) {
     try {
 
-      RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
+      await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
         type: ActionTypeEnum.SendMessage,
         company: company,
         campaign_id: campaign_id,
         campaign_version_id: campaign_version_id,
         data: {
-          ticket: Ticket,
-          message: data.message,
+          ticket: ticket,
+          triggers: data.triggers,
+          customer: data.lead?.customer,
+          business: data.lead?.business,
+          automation_message: data.automation_message,
         }
       })
 
-      return success({
-        data: {
-          ticket: Ticket,
-          message: data.message,
-        }
-      })
+      return success({ message: 'Message sent' })
     } catch (err) {
       console.error('[CreateTicketAction | sendMessage] CATCH: ', err)
       return error({ message: 'Error on sendMessage', error: err })
     }
   }
 
-  async #hasOpenTickets(company, crm) {
+  async #hasOpenTickets(company, customer) {
     try {
-      if (!crm) false
+      if (!customer) false
 
-      const checkOpenTickets = await this.services.workflow.checkOpenTickets(company.token, crm)
+      const checkOpenTickets = await this.services.workflow.checkOpenTickets(company.token, customer)
       if (!checkOpenTickets || checkOpenTickets.length <= 0) return false
 
       return checkOpenTickets.filter(ticket => ticket.open).length > 0

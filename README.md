@@ -269,7 +269,7 @@ Negociação é uma lista de objeto onde deve conter o template do CRM que indiq
 
 # Agendamento de campanha.
 
-No momento que uma campanha é criada é enviado uma mensagem para fila scheduling_campaign onde esta mensagem só sera publicada na fila de fato na data/hora agendada, caso o usurário não informe data/hora é utilizado data/hora atual da criação da campanha e sera executado assim que salvar. 
+No momento que uma campanha é criada é enviado uma mensagem para fila campaign_scheduling onde esta mensagem só sera publicada na fila de fato na data/hora agendada, caso o usurário não informe data/hora é utilizado data/hora atual da criação da campanha e sera executado assim que salvar. 
 
 Isso é feito pelo método **#scheduler()** dentro de **/src/controller/CampaignVersionController.js**
 
@@ -277,7 +277,7 @@ O consumo desta fila é realizado pelo método **campaignScheduling()** dentro d
 
 # Execução da campanha.
 
-A partir do momento que a mensagem é publicada na fila **scheduling_campaign** a execução da campanha começa a ser executada pelo método **executeCampaign()** responsável por preparar os leads, essa fase segue as seguintes etapas. 
+A partir do momento que a mensagem é publicada na fila **campaign_scheduling** a execução da campanha começa a ser executada pelo método **executeCampaign()** responsável por preparar os leads, essa fase segue as seguintes etapas. 
 
 ![Untitled](https://gitlab.digitalk.com.br/digitalk/backend/microservicos/mscampaign/-/raw/master/docs/prepare_leads.png)
 

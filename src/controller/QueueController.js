@@ -14,9 +14,9 @@ export default class QueueController {
 
   async campaignScheduling(rabbit) {
     try {
-      const exchange_name = 'scheduling_campaign'
-      const routingKey = 'scheduling_campaign'
-      const queueName = 'scheduling_campaign'
+      const exchange_name = 'campaign_scheduling'
+      const routingKey = 'campaign_scheduling'
+      const queueName = 'campaign_scheduling'
 
       rabbit.assertExchange(exchange_name, 'x-delayed-message', {
         autoDelete: false,
@@ -71,7 +71,7 @@ export default class QueueController {
       rabbit.assertQueue(queue_dead_name, { durable: true })
       rabbit.assertQueue(queue_name, { durable: true, deadLetterExchange: exchange_dead_name })
 
-      rabbit.prefetch(10)
+      rabbit.prefetch(1)
 
       rabbit.assertExchange(exchange_dead_name, 'fanout', { durable: 'true' })
       rabbit.assertExchange(exchange_name, 'direct', { durable: 'true' })

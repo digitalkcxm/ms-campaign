@@ -4,11 +4,11 @@ import AppVariables from '../config/appVariables.js'
 export default class CRMManagerService {
   static async getLeadsByFilter(company, tenantID, filter) {
     try {
-      const data = {}
+      const payload = {}
 
-      if (filter[0].operator) data.operator = filter[0].operator
+      if (filter[0].operator) payload.operator = filter[0].operator
       if (filter[0].rules && filter[0].rules.length > 0) {
-        data.rules = filter[0].rules.map(rule => {
+        payload.rules = filter[0].rules.map(rule => {
           const obj = {}
           const searchInfo = rule.variable.split('.')
           const operators = {
@@ -28,10 +28,9 @@ export default class CRMManagerService {
           return obj
         })
       } else {
-        data.rules = []
+        payload.rules = []
       }
 
-      console.log('DATA ====> ', JSON.stringify(data))
       const result = await axios.request({
         method: 'post',
         maxBodyLength: Infinity,
@@ -41,7 +40,7 @@ export default class CRMManagerService {
           'x-tenant-id': tenantID,
           'Content-Type': 'application/json'
         },
-        data
+        data: payload
       })
 
       return result.data

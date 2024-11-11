@@ -49,13 +49,31 @@ export const BrokerWhatsappNameEnum = {
   BeeApp: 'BeeApp',
 }
 
-
-export const MapIDs_BrokerNameEnum = {
+export const BrokerWhatsappEnumIDs = {
   1: BrokerWhatsappNameEnum.Digitalk,
   2: BrokerWhatsappNameEnum.Vonage,
   3: BrokerWhatsappNameEnum.Gupshup,
   4: BrokerWhatsappNameEnum.MShubwsapp,
   5: BrokerWhatsappNameEnum.BeeApp,
+}
+
+export const GetChannelBroker = (channel_id, broker_id) => {
+  const enums = {
+    '3:4': ChannelBrokerEnum.SmsM2C,
+    '4:1': ChannelBrokerEnum.EmailImap,
+    '2:1': ChannelBrokerEnum.WhatsappDigitalk,
+    '2:3': ChannelBrokerEnum.WhatsappOficial,
+  }
+
+  const chanBrok = `${channel_id}:${broker_id}`
+  return enums[chanBrok]
+}
+
+export const ChannelBrokerEnum = {
+  WhatsappDigitalk: 'Whatsapp:Digitalk',
+  WhatsappOficial: 'Whatsapp:Gupshup',  
+  EmailImap: 'Email:Imap',
+  SmsM2C: 'SMS:M2C',
 }
 
 export const ActionTypeEnum = {

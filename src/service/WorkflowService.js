@@ -57,12 +57,12 @@ export default class WorkflowService {
     }
   }
 
-  async checkOpenTickets(Authorization, id_crm) {
+  async checkOpenTickets(Authorization, customer) {
     try {
       const result = await axios.request({
         method: 'get',
         maxBodyLength: Infinity,
-        url: `${AppVariables.MSWorkflow()}/api/v1/customer/linked_tickets?id_crm=${id_crm}`,
+        url: `${AppVariables.MSWorkflow()}/api/v1/customer/linked_tickets?id_crm=${customer.id_crm}`,
         headers: { Authorization }
       })
 

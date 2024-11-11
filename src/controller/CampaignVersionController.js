@@ -78,8 +78,8 @@ export default class CampaignVersionController {
       }
 
       await RabbitMQService.sendToExchangeQueueDelayed(
-        'scheduling_campaign',
-        'scheduling_campaign',
+        'campaign_scheduling',
+        'campaign_scheduling',
         campaignPayloadScheduler,
         schedulerInMilliseconds
       )

@@ -32,7 +32,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
 
   async handleAction({ company_id, campaign_id, campaign_version_id }) {
     try {
-      const checkCampaign = await this.campaignModel.getByID(company_id, campaign_id)
+      const checkCampaign = await this.models.campaign.getByID(company_id, campaign_id)
       if ([status.canceled, status.draft, status.finished].includes(checkCampaign[0].status)) {
         return true
       }
@@ -42,7 +42,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
 
       // Pega as infos da campanha
       const company = await this.#GetCompanyFromService(company_id)
-      const campaignInfo = this.controllers.campaign().getByID(company, campaign_id)
+      const campaignInfo = await this.controllers.campaign().getByID(company, campaign_id)
       if (campaignInfo.campaign_version_id != campaign_version_id) {
         console.error(`[${this.actionName}.handleAction] Campaign version is different from the one passed as parameter`, { input: campaign_version_id, output: campaignInfo.campaign_version_id })
         return true
@@ -85,7 +85,12 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
   async #GetCompanyFromService(company_id) {
     try {
       const companyFromModel = await this.models.company.getByID(company_id)
-      return await this.services.company.getBytoken(companyFromModel[0].token)
+      const companyFromService = await this.services.company.getBytoken(companyFromModel[0].token)
+      return {
+        id: company_id,
+        name: companyFromService.name,
+        token: companyFromService.token,
+      }
     } catch (err) {
       console.error(`[${this.actionName}.#getCompanyFromService] Catch Error: `, err)
       return null
@@ -150,18 +155,19 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
           campaign_id: campaignInfo.id,
           campaign_version_id: campaignInfo.campaign_version_id,
           data: {
-            tenantID: campaignInfo.id_tenant,
-            id_phase: campaignInfo.id_phase,
-            end_date: campaignInfo.end_date,
             name: lead.nome,
-            contato: lead.contato,
+            id_phase: campaignInfo.id_phase,
             id_workflow: campaignInfo.id_workflow,
+            lead: lead,
+            triggers: lead.contatos,
+            automation_message: lead.message,
+            business: null, // TODO: precisa implementar o pre-processamento
+            customer: customerLink,
+            tenantID: campaignInfo.id_tenant,
             ignore_open_tickets: campaignInfo.ignore_open_tickets,
-            negotiation: null, // TODO: precisa implementar o pre-processamento
-            message: lead.message,
             created_by: campaignInfo.created_by,
+            end_date: campaignInfo.end_date,
             campaign_type: campaignInfo.file_url ? 'file' : 'crm',
-            crm: customerLink
           }
         })
       }

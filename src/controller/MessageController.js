@@ -2,7 +2,7 @@ import moment from "moment"
 
 import CRMController from "./CRMController.js"
 import RabbitMQService from "../service/RabbitMQService.js"
-import { BrokerWhatsappNameEnum, ChannelNameEnum, MapIDs_BrokerNameEnum, ChannelEnumIDs } from "../model/Enumerations.js"
+import { BrokerWhatsappNameEnum, ChannelNameEnum, BrokerWhatsappEnumIDs, ChannelEnumIDs } from "../model/Enumerations.js"
 
 const crmController = new CRMController()
 
@@ -14,7 +14,7 @@ export default class MessageController {
 
       if (
         ChannelEnumIDs[data.channel.id] === ChannelNameEnum.Whatsapp &&
-        MapIDs_BrokerNameEnum[data.channel.broker_id] == BrokerWhatsappNameEnum.Gupshup
+        BrokerWhatsappEnumIDs[data.channel.broker_id] == BrokerWhatsappNameEnum.Gupshup
       ) {
         variables = await this.#getVariables(data)
 
