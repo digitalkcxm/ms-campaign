@@ -12,7 +12,7 @@ export default class QueueController {
     this.workflowController = new WorkflowController(database, logger)    
   }
 
-  async campaignScheduling(rabbit) {
+  async CampaignScheduling(rabbit) {
     try {
       const queue_name = 'campaign_scheduling'
       const exchange_name = 'campaign_scheduling'
@@ -29,7 +29,7 @@ export default class QueueController {
       rabbit.assertQueue(queue_name, { durable: true })
       rabbit.bindQueue(queue_name, exchange_name, queue_name_binded)
       
-      rabbit.prefetch(10)
+      rabbit.prefetch(1)
 
       rabbit.consume(queue_name, async (msg) => {
 
@@ -63,7 +63,7 @@ export default class QueueController {
     }
   }
 
-  async campaignCreateTicket(rabbit) {
+  async CampaignEvents(rabbit) {
     const MAX_RETRY_ATTEMPTS = 3
 
     const queue_name = 'campaign_execution'
@@ -76,7 +76,7 @@ export default class QueueController {
       rabbit.assertQueue(queue_dead_name, { durable: true })
       rabbit.assertQueue(queue_name, { durable: true, deadLetterExchange: exchange_dead_name })
 
-      rabbit.prefetch(1)
+      rabbit.prefetch(100)
 
       rabbit.assertExchange(exchange_dead_name, 'fanout', { durable: 'true' })
       rabbit.assertExchange(exchange_name, 'direct', { durable: 'true' })
