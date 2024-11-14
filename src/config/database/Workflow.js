@@ -1,13 +1,8 @@
 import knex from 'knex'
 
-let WORKFLOW_CONNECTION = null
-
 export default class WorkflowDatabase {
 
   static GetConnection() {
-    if (WORKFLOW_CONNECTION) {
-      return WORKFLOW_CONNECTION
-    }
 
     const dbName = process.env.DB_WORKFLOW_DATABASE
     const host = process.env.DB_WORKFLOW_HOST
@@ -17,14 +12,7 @@ export default class WorkflowDatabase {
     const KnexCredentials = this.#KnexCredentials(host, dbName, user, password)
     const connection = knex(KnexCredentials)
 
-    WORKFLOW_CONNECTION = connection
-
     return connection
-  }
-
-  static CloseConnection() {
-    WORKFLOW_CONNECTION.destroy()
-    WORKFLOW_CONNECTION = null
   }
 
   static #KnexCredentials(host, database, user, password) {

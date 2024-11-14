@@ -146,8 +146,6 @@ export default class WorkflowServiceV2 {
     } catch (err) {
       await trx.rollback()
       return error({ message: 'Erro ao criar tickets', error: err })
-    } finally {
-      CloseConnection()
     }
 
     return success({ data: leadsCriados })
@@ -265,8 +263,4 @@ export default class WorkflowServiceV2 {
 
 function GetConnection() {
   return WorkflowDatabase.GetConnection()
-}
-
-function CloseConnection() {
-  return WorkflowDatabase.CloseConnection()
 }
