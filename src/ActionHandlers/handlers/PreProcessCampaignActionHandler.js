@@ -34,10 +34,12 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
 
   async handleAction({ company_id, campaign_id, campaign_version_id }) {
     try {
+
       const checkCampaign = await this.models.campaign.getByID(company_id, campaign_id)
-      // if ([status.canceled, status.draft, status.finished].includes(checkCampaign[0].status)) {
-      //   return true
-      // }
+      if ([status.canceled, status.draft, status.finished].includes(checkCampaign[0].status)) {
+        console.log(`[${this.actionName}.handleAction] Campaign is not running: `, checkCampaign[0].status)
+        return true
+      }
 
       // Atualiza os status da campanha e da versão da campanha
       await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.running)
@@ -53,7 +55,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
       // Pega os leads que serão acionados
       const Leads = await GetLeads(campaignInfo, company)
       if (!Leads?.ok) {
-        console.error(`[${this.actionName}.handleAction] Error getting leads`, Leads)
+        console.error(`[${this.actionName}.handleAction] Error getting leads`, Leads)        
         await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.error)
         return false
       }
@@ -61,6 +63,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
       // Caso não haja leads, finaliza a campanha
       if (!Leads?.data?.result?.length) {
         console.log(`[${this.actionName}.handleAction] No Leads found`, Leads)
+        await this.models.campaign.update(campaign_id, { total: 0 })
         await this.#UpdateCampaignStatus(campaign_id, campaign_version_id, status.finished)
         return true
       }
@@ -191,28 +194,36 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
     const channel = ChannelEnumIDs[id_channel]
 
     const customerTemplate = await CRMManagerService.getPrincipalTemplateByCustomer(company.token, campaignInfo.id_tenant)
-    const leadsCreated = await this.services.workflow.CreateTickets({
-      id_workflow, 
-      id_phase, 
-      ignore_open_tickets, 
-      campaign_name,
-      is_mailing: !!campaignInfo.file_url, 
-      leads: LeadsPreProcessed,
-      customerTemplate,
-      origin_channel: channel
-    })
-    if(!leadsCreated.ok) {
-      return leadsCreated
+
+    let leadsCreated = []
+    const batchSize = 1000
+    for(let i = 0; i < LeadsPreProcessed.length; i += batchSize) {
+      const slice = LeadsPreProcessed.slice(i, i + batchSize)
+      const result = await this.services.workflow.CreateTickets({
+        id_workflow, 
+        id_phase, 
+        ignore_open_tickets, 
+        campaign_name,
+        is_mailing: !!campaignInfo.file_url, 
+        leads: slice,
+        customerTemplate,
+        origin_channel: channel
+      })
+      if(!result.ok) {
+        return result
+      }      
+
+      leadsCreated = leadsCreated.concat(...result.data)
     }
 
-    for(let lead of leadsCreated.data) {
+    for(let lead of leadsCreated) {
       await RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
         event: 'create_ticket',
         data: lead.ticket,
       })
     }
 
-    return leadsCreated
+    return success({ data: leadsCreated })
   }
 }
 

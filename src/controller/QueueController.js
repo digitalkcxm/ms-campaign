@@ -14,9 +14,10 @@ export default class QueueController {
 
   async campaignScheduling(rabbit) {
     try {
+      const queue_name = 'campaign_scheduling'
       const exchange_name = 'campaign_scheduling'
-      const routingKey = 'campaign_scheduling'
-      const queueName = 'campaign_scheduling'
+      const queue_name_binded = 'campaign_scheduling'
+      const queue_dead_name = 'dead_campaign_scheduling'
 
       rabbit.assertExchange(exchange_name, 'x-delayed-message', {
         autoDelete: false,
@@ -25,12 +26,12 @@ export default class QueueController {
         arguments: { 'x-delayed-type': 'direct' }
       })
 
-      rabbit.assertQueue(queueName, { durable: true })
-      rabbit.bindQueue(queueName, exchange_name, routingKey)
+      rabbit.assertQueue(queue_name, { durable: true })
+      rabbit.bindQueue(queue_name, exchange_name, queue_name_binded)
+      
+      rabbit.prefetch(10)
 
-      rabbit.prefetch(1)
-
-      rabbit.consume(queueName, async (msg) => {
+      rabbit.consume(queue_name, async (msg) => {
 
         console.log('[QueueController | campaignScheduling] ExecutingCampaign: ', msg.content.toString())
         const incomingEvent = JSON.parse(msg.content.toString())
@@ -45,12 +46,16 @@ export default class QueueController {
         }
         
         // Executa a ação
-        const process = await ActionHandler.handleAction(incomingEvent)
-        if (!process) {
-          rabbit.reject(msg)
-        } else {
-          rabbit.ack(msg)
-        }
+        const result = await ActionHandler.handleAction(incomingEvent)
+        if (!result) {
+          await rabbit.assertQueue(queue_dead_name, { durable: true, autoDelete: false })
+          await rabbit.sendToQueue(queue_dead_name, Buffer.from(msg.content.toString()), {
+            headers: msg.properties.headers || {},
+            persistent: true
+          })
+        } 
+
+        rabbit.ack(msg)
 
       })
     } catch (error) {
@@ -94,8 +99,8 @@ export default class QueueController {
         }
         
         // Executa a ação
-        const process = await ActionHandler.handleAction(incomingEvent)
-        if(process){
+        const result = await ActionHandler.handleAction(incomingEvent)
+        if(result){
           rabbit.ack(msg)
           return
         }

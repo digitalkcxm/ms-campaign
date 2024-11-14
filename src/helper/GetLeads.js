@@ -45,7 +45,7 @@ async function GetLeadByMailing(campaignInfo) {
 
   return success({
     data: {
-      isMaiging: true,
+      isMailing: true,
       result: leads
     }
   })
@@ -59,7 +59,7 @@ async function GetLeadByCRM(authToken, tenantID, filter, channel_id) {
     const result = await CRMManagerService.DataFilter.getLeadsByFilter(filter)
     if (!result.data.length) return success({
       data: {
-        isMaiging: false,
+        isMailing: false,
         result: []
       }
     })
@@ -92,8 +92,8 @@ async function GetLeadByCRM(authToken, tenantID, filter, channel_id) {
 
     return success({
       data: {
-        isMaiging: false,
-        result: leads
+        isMailing: false,
+        result: leads.filter((lead) => lead.contatos.length > 0)
       }
     })
   } catch (err) {
@@ -117,7 +117,7 @@ async function GetInfoFromTable(token, x_tenand_id, template_id, serch_field, ma
   const results = []
 
   let hasMoreLeads = true
-  for(let cursor = 0, size = 2; hasMoreLeads; ) {
+  for(let cursor = 0, size = 1000; hasMoreLeads; ) { // TODO: modificar size
     const result = await CRMManagerService.DataFilter.filterFromTable(
       template.data.table_name, 
       tableFields,

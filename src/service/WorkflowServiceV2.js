@@ -142,7 +142,7 @@ export default class WorkflowServiceV2 {
         is_mailing
       })
 
-      await trx.commit()
+      await trx.commit() // TODO: verificar se eu preciso dar um release na transaction
     } catch (err) {
       await trx.rollback()
       return error({ message: 'Erro ao criar tickets', error: err })
