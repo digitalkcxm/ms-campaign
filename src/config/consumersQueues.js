@@ -5,8 +5,8 @@ import { database, logger, connRabbit, redis } from './server.js'
 const queueController = new QueueController(database, logger, redis)
 
 export async function startConsumersQueues() {
-  RabbitMQ.addConsumer(queueController.campaignScheduling.bind(queueController))
-  RabbitMQ.addConsumer(queueController.campaignCreateTicket.bind(queueController))
+  RabbitMQ.addConsumer(queueController.CampaignScheduling.bind(queueController))
+  RabbitMQ.addConsumer(queueController.CampaignEvents.bind(queueController))
 
   RabbitMQ.startConsumers(connRabbit)
 }

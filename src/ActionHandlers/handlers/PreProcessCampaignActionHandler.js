@@ -82,8 +82,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
         return false
       }
 
-      await this.models.campaign.update(campaign_id, { total: LeadsCriados.data.length })
-      await this.#SendToPreProcessMessage(company, campaignInfo, LeadsCriados.data)
+      await this.models.campaign.update(campaign_id, { total: LeadsCriados.data.length })      
 
       return true
     } catch (err) {
@@ -182,13 +181,20 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
     }
   }
 
-  async #CreateLeads(company, campaignInfo, LeadsPreProcessed) {
+  async #CreateLeads(company, campaignInfo, LeadsPreProcessed) {    
     const {
       id_workflow,
       id_phase,
       ignore_open_tickets,
       name: campaign_name
     } = campaignInfo
+
+    console.log(`[${this.actionName}.#CreateLeads] Inicializando criação de leads.`)
+    console.table({ 
+      campaign_id: campaignInfo.id,
+      campaign_name: campaign_name,
+      total_leads: LeadsPreProcessed.length,
+    })
 
     const { id_channel } = campaignInfo.first_message[0]
     const channel = ChannelEnumIDs[id_channel]
@@ -198,6 +204,8 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
     let leadsCreated = []
     const batchSize = 1000
     for(let i = 0; i < LeadsPreProcessed.length; i += batchSize) {
+      console.log(`[${this.actionName}.#CreateLeads] Criando leads de ${i} a ${i + batchSize}`)
+
       const slice = LeadsPreProcessed.slice(i, i + batchSize)
       const result = await this.services.workflow.CreateTickets({
         id_workflow, 
@@ -214,13 +222,16 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
       }      
 
       leadsCreated = leadsCreated.concat(...result.data)
-    }
-
-    for(let lead of leadsCreated) {
-      await RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
-        event: 'create_ticket',
-        data: lead.ticket,
-      })
+      
+      console.log(`[${this.actionName}.#CreateLeads] [${LeadsPreProcessed.length}/${leadsCreated.length}] Leads criados -> enviando ${slice.length} mensagem para fila...`)
+      
+      await this.#SendToPreProcessMessage(company, campaignInfo, result.data)
+      for(let lead of result.data) {
+        await RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
+          event: 'create_ticket',
+          data: lead.ticket,
+        })
+      }
     }
 
     return success({ data: leadsCreated })
