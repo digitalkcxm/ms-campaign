@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { status } from '../model/Enumerations.js'
+import { ActionTypeEnum, status } from '../model/Enumerations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
 import RabbitMQService from '../service/RabbitMQService.js'
 import CampaignVersionModel from '../model/CampaignVersionModel.js'
@@ -22,12 +22,12 @@ export default class CampaignVersionController {
     const campaignVersion = {}
 
     try {
-      if(negotiation.length > 0) {
+      if (negotiation.length > 0) {
         negotiation = negotiation.map(ng => {
           const keys = Object.keys(ng.values)
 
           for (const key of keys) {
-            if(typeof ng.values[key] == 'string') ng.values[key] = ng.values[key].replace(/^R\$\s*/, '')
+            if (typeof ng.values[key] == 'string') ng.values[key] = ng.values[key].replace(/^R\$\s*/, '')
           }
 
           return ng
@@ -63,14 +63,6 @@ export default class CampaignVersionController {
     }
   }
 
-  async updateStatus(id, id_status) {
-    try {
-      return await this.campaignVersionModel.updateStatus(id, id_status)
-    } catch (err) {
-      console.log('🚀 ~ CampaignVersionController ~ update ~ err:', err)
-    }
-  }
-
   async #scheduler(company_id, campaign_id, campaign_version_id, scheduled_date) {
     try {
       const now = moment()
@@ -78,8 +70,19 @@ export default class CampaignVersionController {
 
       const schedulerInMilliseconds = scheduledDate.diff(now)
 
-      const result = await RabbitMQService.sendToExchangeQueueDelayed('scheduling_campaign', 'scheduling_campaign', { company_id, campaign_id, campaign_version_id }, schedulerInMilliseconds)
-      this.logger.info(result)
+      const campaignPayloadScheduler = {
+        type: ActionTypeEnum.PreProcessCampaign,
+        company_id,
+        campaign_id,
+        campaign_version_id
+      }
+
+      await RabbitMQService.sendToExchangeQueueDelayed(
+        'campaign_scheduling',
+        'campaign_scheduling',
+        campaignPayloadScheduler,
+        schedulerInMilliseconds
+      )
 
       return true
     } catch (err) {
