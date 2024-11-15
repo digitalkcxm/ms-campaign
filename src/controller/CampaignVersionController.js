@@ -16,7 +16,7 @@ export default class CampaignVersionController {
     } catch (err) {
       console.log('🚀 ~ CampaignVersionController ~ getByID ~ err:', err)
     }
-  }
+  } 
 
   async create(id_company, id_workflow, id_campaign, created_by, draft, repeat, start_date, repetition_rule, filter, end_date, id_phase, ignore_open_tickets, first_message, negotiation, file_url) {
     const campaignVersion = {}
