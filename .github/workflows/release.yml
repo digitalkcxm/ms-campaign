@@ -14,29 +14,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Configurar Node.js (versão 20)
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      # Instalar dependências (se necessário)
-      - name: Install dependencies
-        run: npm install
-
-      # Rodar o semantic-release para gerar o changelog e a versão
-      - name: Generate changelog and update version
+      # Gerar tag, changelog e atualizar versão no package.json
+      - name: Generate version and changelog
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          npx semantic-release --dry-run > semantic-release-output.txt
-          RELEASE_TYPE=$(grep -oE 'patch|minor|major' semantic-release-output.txt | head -1)
+          # Determinar o tipo de versão com semantic-release
+          RELEASE_TYPE=$(npx semantic-release --dry-run | grep -oE 'patch|minor|major' | head -1)
+
+          # Se houver tipo de release válido, atualizar versão e criar changelog
           if [ -n "$RELEASE_TYPE" ]; then
             npx standard-version --release-as $RELEASE_TYPE
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
             git add package.json CHANGELOG.md
             git commit -m "chore(release): update version to $(jq -r .version package.json)"
-            git push
+            git tag "$(jq -r .version package.json)"
+            git push --follow-tags
           else
             echo "No release necessary."
           fi
