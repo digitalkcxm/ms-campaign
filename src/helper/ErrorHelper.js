@@ -1,6 +1,5 @@
 import util from 'util'
 import logger from '../config/logger.js'
-import tracing from '../config/elastic-apm.js'
 export default class ErrorHelper extends Error {
   constructor(className, name, message, params, originalError) {
     super(message)
@@ -22,15 +21,6 @@ export default class ErrorHelper extends Error {
     }
 
     Error.captureStackTrace(this, this.constructor)
-
-    tracing.captureError(this.originalStack, {
-      custom: {
-        message,
-        name: this.name,
-        params: this.params,
-        originalError: this.originalError
-      }
-    })
 
     logger.error(`
       ProjectName: ${process.env.PROJECT_NAME}
