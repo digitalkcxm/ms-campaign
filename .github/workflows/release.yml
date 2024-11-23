@@ -15,6 +15,15 @@ jobs:
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Debug Git Operations
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          echo "Test Commit" >> test.txt
+          git add test.txt
+          git commit -m "test: testing git operations"
+          git tag "v0.0.1"
+          git push origin main --follow-tags
 
       # Gerar tag, changelog e atualizar versão no package.json
       - name: Generate version and changelog
