@@ -47,7 +47,7 @@ jobs:
             "@semantic-release/git"
 
       # Atualizar a versão no package.json
-      - name: Atualiza versão do package.json
+      - name: Update version in package.json
         run: |
           # Configurar identidade do autor
           git config user.name "github-actions[bot]"
@@ -63,4 +63,6 @@ jobs:
           # Commitar as mudanças no package.json
           git add package.json package-lock.json
           git commit -m "chore(release): $LATEST_TAG"
+
+          # Fazer push das mudanças para o repositório
           git push origin main
