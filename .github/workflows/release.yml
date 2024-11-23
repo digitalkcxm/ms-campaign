@@ -46,6 +46,13 @@ jobs:
             "@semantic-release/changelog" \
             "@semantic-release/git"
 
+      # Sincronizar repositório local com remoto
+      - name: Sync with remote repository
+        run: |
+          echo "Pulling latest changes from remote repository..."
+          git pull origin main --rebase
+          git fetch --tags
+
       # Atualizar a versão no package.json
       - name: Update version in package.json
         run: |
