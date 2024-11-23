@@ -47,7 +47,7 @@ jobs:
             "@semantic-release/git"
 
       # Atualizar a versão no package.json
-      - name: Update version in package.json
+      - name: Atualiza versão do package.json
         run: |
           # Configurar identidade do autor
           git config user.name "github-actions[bot]"
