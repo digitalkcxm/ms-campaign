@@ -19,22 +19,25 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Gerar versão, changelog, e tag
+      # Instalar semantic-release e seus plugins dinamicamente
+      - name: Install semantic-release plugins
+        run: |
+          echo "Installing semantic-release and required plugins..."
+          npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
+
+      # Executar semantic-release para determinar versão e gerar release
+      - name: Run semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Running semantic-release to determine next release..."
+          npx semantic-release --branches main --dry-run --debug || true
+
+      # Atualizar versão, gerar changelog, e criar tag
       - name: Generate version, changelog, and tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Configurar branch e plugins diretamente no semantic-release
-          echo "Running semantic-release..."
-          npx semantic-release --branches main \
-            --plugins \
-              "@semantic-release/commit-analyzer" \
-              "@semantic-release/release-notes-generator" \
-              "@semantic-release/changelog" \
-              "@semantic-release/git" \
-            --dry-run --debug
-
-          # Determinar tipo de release gerado (patch, minor, major)
           RELEASE_TYPE=$(npx semantic-release --branches main --dry-run 2>&1 | grep -oE 'patch|minor|major' | head -1)
           echo "Release type determined: $RELEASE_TYPE"
 
