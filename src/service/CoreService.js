@@ -143,7 +143,7 @@ export default class CoreService {
 
       return token
     } catch (err) {
-      console.log('🚀 ~ file: CoreService.js:39 ~ CoreService ~ #getToken ~ err:', err.response.status, err.response.data)
+      console.error('class=CoreService method=#getToken', err.response.status, err.response.data)
 
     }
   }
