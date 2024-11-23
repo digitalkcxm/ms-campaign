@@ -1,3 +1,11 @@
+## [0.1.5](https://github.com/digitalkcxm/ms-campaign/compare/v0.1.4...v0.1.5) (2024-11-23)
+
+
+### Bug Fixes
+
+* replace log ([7eec49c](https://github.com/digitalkcxm/ms-campaign/commit/7eec49cabe2e8214999931ac13592a09693d9b16))
+* replace log ([575d595](https://github.com/digitalkcxm/ms-campaign/commit/575d59527a805e40aa02b495054e4e85fd8021c4))
+
 ## [0.1.4](https://github.com/digitalkcxm/ms-campaign/compare/v0.1.3...v0.1.4) (2024-11-23)
 
 
