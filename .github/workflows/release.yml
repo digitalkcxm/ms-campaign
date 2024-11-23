@@ -1,0 +1,42 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout do código
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Configurar Node.js (versão 20)
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # Instalar dependências (se necessário)
+      - name: Install dependencies
+        run: npm install
+
+      # Rodar o semantic-release para gerar o changelog e a versão
+      - name: Generate changelog and update version
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          npx semantic-release --dry-run > semantic-release-output.txt
+          RELEASE_TYPE=$(grep -oE 'patch|minor|major' semantic-release-output.txt | head -1)
+          if [ -n "$RELEASE_TYPE" ]; then
+            npx standard-version --release-as $RELEASE_TYPE
+            git add package.json CHANGELOG.md
+            git commit -m "chore(release): update version to $(jq -r .version package.json)"
+            git push
+          else
+            echo "No release necessary."
+          fi
