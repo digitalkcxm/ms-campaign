@@ -9,7 +9,7 @@ export default class QueueController {
     this.redis = redis
 
     this.campaignController = new CampaignController(database, logger)
-    this.workflowController = new WorkflowController(database, logger)    
+    this.workflowController = new WorkflowController(database, logger)
   }
 
   async CampaignScheduling(rabbit) {
@@ -28,14 +28,14 @@ export default class QueueController {
 
       rabbit.assertQueue(queue_name, { durable: true })
       rabbit.bindQueue(queue_name, exchange_name, queue_name_binded)
-      
+
       rabbit.prefetch(1)
 
       rabbit.consume(queue_name, async (msg) => {
 
-        console.log('[QueueController | campaignScheduling] ExecutingCampaign: ', msg.content.toString())
+        console.log('class=QueueController method=campaignScheduling message=ExecutingCampaign: ', msg.content.toString())
         const incomingEvent = JSON.parse(msg.content.toString())
-        
+
         // Instancia o handler correto
         const eventType = incomingEvent?.type || 'unknown'
         const ActionHandler = HandlersFactory.create(eventType, this.database, this.redis, this.logger)
@@ -44,7 +44,7 @@ export default class QueueController {
           rabbit.nack(msg, false, false)
           return
         }
-        
+
         // Executa a ação
         const result = await ActionHandler.handleAction(incomingEvent)
         if (!result) {
@@ -53,7 +53,7 @@ export default class QueueController {
             headers: msg.properties.headers || {},
             persistent: true
           })
-        } 
+        }
 
         rabbit.ack(msg)
 
@@ -97,7 +97,7 @@ export default class QueueController {
           rabbit.nack(msg, false, false)
           return
         }
-        
+
         // Executa a ação
         const result = await ActionHandler.handleAction(incomingEvent)
         if(result){
