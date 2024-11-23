@@ -31,14 +31,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Running semantic-release to determine next release..."
-          npx semantic-release --branches main --dry-run --debug || true
+          npx semantic-release --no-ci --branches main --plugins \
+            "@semantic-release/commit-analyzer" \
+            "@semantic-release/release-notes-generator" \
+            "@semantic-release/changelog" \
+            "@semantic-release/git" \
+            --dry-run --debug || true
 
       # Atualizar versão, gerar changelog, e criar tag
       - name: Generate version, changelog, and tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          RELEASE_TYPE=$(npx semantic-release --branches main --dry-run 2>&1 | grep -oE 'patch|minor|major' | head -1)
+          RELEASE_TYPE=$(npx semantic-release --no-ci --branches main --dry-run 2>&1 | grep -oE 'patch|minor|major' | head -1)
           echo "Release type determined: $RELEASE_TYPE"
 
           if [ -n "$RELEASE_TYPE" ]; then
