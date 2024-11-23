@@ -25,37 +25,21 @@ jobs:
           echo "Installing semantic-release and required plugins..."
           npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
 
-      # Executar semantic-release para determinar versão e gerar release
+      # Executar semantic-release para criar versão, changelog, e tag
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Running semantic-release to determine next release..."
+          echo "Running semantic-release to create release..."
           npx semantic-release --no-ci --branches main --plugins \
             "@semantic-release/commit-analyzer" \
             "@semantic-release/release-notes-generator" \
             "@semantic-release/changelog" \
-            "@semantic-release/git" \
-            --dry-run --debug || true
+            "@semantic-release/git"
 
-      # Atualizar versão, gerar changelog, e criar tag
-      - name: Generate version, changelog, and tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # (Opcional) Validar a tag criada
+      - name: Validate created tag
         run: |
-          RELEASE_TYPE=$(npx semantic-release --no-ci --branches main --dry-run 2>&1 | grep -oE 'patch|minor|major' | head -1)
-          echo "Release type determined: $RELEASE_TYPE"
-
-          if [ -n "$RELEASE_TYPE" ]; then
-            echo "Generating version and changelog..."
-            npx standard-version --release-as $RELEASE_TYPE
-
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git add package.json CHANGELOG.md
-            git commit -m "chore(release): update version"
-            git tag "$(jq -r .version package.json)"
-            git push origin main --follow-tags
-          else
-            echo "No changes detected. Skipping release."
-          fi
+          echo "Checking tags..."
+          git fetch --tags
+          git tag
