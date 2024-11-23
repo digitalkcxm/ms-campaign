@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout do código
+      # Checkout do código com permissões para push
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Gerar tag, changelog e atualizar versão no package.json
       - name: Generate version and changelog
@@ -30,7 +32,7 @@ jobs:
             git add package.json CHANGELOG.md
             git commit -m "chore(release): update version to $(jq -r .version package.json)"
             git tag "$(jq -r .version package.json)"
-            git push --follow-tags
+            git push origin main --follow-tags
           else
             echo "No release necessary."
           fi
