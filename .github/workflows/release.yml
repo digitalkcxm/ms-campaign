@@ -5,43 +5,55 @@ on:
     branches:
       - main
 
+permissions:
+  contents: write
+
 jobs:
   release:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout do código com permissões para push
+      # Checkout do código
       - name: Checkout repository
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Debug Git Operations
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          echo "Test Commit" >> test.txt
-          git add test.txt
-          git commit -m "test: testing git operations"
-          git tag "v0.0.1"
-          git push origin main --follow-tags
 
-      # Gerar tag, changelog e atualizar versão no package.json
-      - name: Generate version and changelog
+      # Atualizar versão, criar changelog e tag
+      - name: Generate version, changelog, and tag
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Determinar o tipo de versão com semantic-release
+          # Determinar tipo de versão com semantic-release (dry-run)
           RELEASE_TYPE=$(npx semantic-release --dry-run | grep -oE 'patch|minor|major' | head -1)
+          echo "Determined RELEASE_TYPE: $RELEASE_TYPE"
 
-          # Se houver tipo de release válido, atualizar versão e criar changelog
+          # Se houver tipo de release válido
           if [ -n "$RELEASE_TYPE" ]; then
+            echo "Generating new version and changelog..."
+
+            # Atualiza package.json, gera changelog e cria tag
             npx standard-version --release-as $RELEASE_TYPE
+
+            # Exibe o estado do repositório para debug
+            git status
+
+            # Configurar usuário GitHub Actions
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
+
+            # Commitar mudanças
             git add package.json CHANGELOG.md
             git commit -m "chore(release): update version to $(jq -r .version package.json)"
-            git tag "$(jq -r .version package.json)"
+
+            # Criar tag
+            NEW_TAG=$(jq -r .version package.json)
+            echo "Creating new tag: $NEW_TAG"
+            git tag "$NEW_TAG"
+
+            # Fazer push das mudanças e da tag
+            echo "Pushing changes and tags to repository..."
             git push origin main --follow-tags
           else
-            echo "No release necessary."
+            echo "No release necessary. Skipping version update."
           fi
