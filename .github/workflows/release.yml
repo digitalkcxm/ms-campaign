@@ -14,18 +14,18 @@ jobs:
 
     steps:
       # Checkout do código
-      - name: Checkout repository
+      - name: Checkout para o repositório
         uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Instalar dependências globalmente
-      - name: Install dependencies
+      - name: Instala dependências
         run: |
           npm install -g semantic-release standard-version @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
 
       # Executar semantic-release para criar tag e gerar changelog
-      - name: Run semantic-release
+      - name: Executa o semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -36,7 +36,7 @@ jobs:
             "@semantic-release/git"
 
       # Atualizar a versão no package.json
-      - name: Update version in package.json
+      - name: Faz update da versão no package.json
         run: |
           # Obter a versão mais recente do Git
           LATEST_TAG=$(git describe --tags --abbrev=0)
