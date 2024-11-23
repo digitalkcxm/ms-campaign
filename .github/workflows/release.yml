@@ -13,6 +13,13 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout do código com histórico completo
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Garante o histórico completo do Git
+
       # Verificar se o commit foi feito pelo GitHub Actions Bot
       - name: Exit if commit made by GitHub Actions
         run: |
@@ -22,12 +29,6 @@ jobs:
             echo "Commit made by GitHub Actions bot. Exiting..."
             exit 0
           fi
-
-      # Checkout do código
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
 
       # Instalar dependências globalmente
       - name: Install dependencies
