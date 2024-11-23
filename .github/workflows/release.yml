@@ -19,27 +19,35 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Instalar semantic-release e seus plugins dinamicamente
-      - name: Install semantic-release plugins
+      # Instalar dependências globalmente
+      - name: Install dependencies
         run: |
-          echo "Installing semantic-release and required plugins..."
-          npm install -g semantic-release @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
+          npm install -g semantic-release standard-version @semantic-release/commit-analyzer @semantic-release/release-notes-generator @semantic-release/changelog @semantic-release/git
 
-      # Executar semantic-release para criar versão, changelog, e tag
+      # Executar semantic-release para criar tag e gerar changelog
       - name: Run semantic-release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "Running semantic-release to create release..."
           npx semantic-release --no-ci --branches main --plugins \
             "@semantic-release/commit-analyzer" \
             "@semantic-release/release-notes-generator" \
             "@semantic-release/changelog" \
             "@semantic-release/git"
 
-      # (Opcional) Validar a tag criada
-      - name: Validate created tag
+      # Atualizar a versão no package.json
+      - name: Update version in package.json
         run: |
-          echo "Checking tags..."
-          git fetch --tags
-          git tag
+          # Obter a versão mais recente do Git
+          LATEST_TAG=$(git describe --tags --abbrev=0)
+          echo "Latest tag: $LATEST_TAG"
+
+          # Atualizar o package.json com a versão da tag mais recente
+          npx standard-version --skip.tag --skip.changelog --release-as $LATEST_TAG
+
+          # Commitar as mudanças no package.json
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore(release): update package.json to version $LATEST_TAG"
+          git push origin main
