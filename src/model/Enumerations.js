@@ -63,6 +63,7 @@ export const GetChannelBroker = (channel_id, broker_id) => {
     '4:1': ChannelBrokerEnum.EmailImap,
     '2:1': ChannelBrokerEnum.WhatsappDigitalk,
     '2:3': ChannelBrokerEnum.WhatsappOficial,
+    '18:2': ChannelBrokerEnum.EmailMarketing,
   }
 
   const chanBrok = `${channel_id}:${broker_id}`
@@ -71,14 +72,24 @@ export const GetChannelBroker = (channel_id, broker_id) => {
 
 export const ChannelBrokerEnum = {
   WhatsappDigitalk: 'Whatsapp:Digitalk',
-  WhatsappOficial: 'Whatsapp:Gupshup',  
+  WhatsappOficial: 'Whatsapp:Gupshup',
   EmailImap: 'Email:Imap',
   SmsM2C: 'SMS:M2C',
+  EmailMarketing: 'EmailMarketing:Sendgrid'
 }
 
 export const ActionTypeEnum = {
   CreateLead: 'CreateLeadAction',
-  SendMessage: 'SendMessageAction',  
-  PreProcessCampaign: 'PreProcessCampaignAction',  
+  SendMessage: 'SendMessageAction',
+  PreProcessCampaign: 'PreProcessCampaignAction',
   UpdateStatusCampaign: 'UpdateStatusCampaignAction',
+}
+
+export const ChannelEnum = {
+  chat: 1,
+  whatsapp: 2,
+  sms: 3,
+  email: 4,
+  emailMarketing: 18,
+  phone: 6
 }

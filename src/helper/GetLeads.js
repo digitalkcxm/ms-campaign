@@ -3,6 +3,7 @@ import { URL } from 'url'
 import { success } from './patterns/ReturnPatters.js'
 import { error } from 'console'
 import CRMManagerServiceV2 from '../service/CRMManagerServiceV2.js'
+import { ChannelEnum } from '../model/Enumerations.js'
 
 export default async function GetLeads(campaignInfo, company) {
   const isMailing = !!campaignInfo.file_url
@@ -78,10 +79,10 @@ async function GetLeadByCRM(authToken, tenantID, filter, channel_id) {
     ])
 
     // Concat infos
+    channel_id = (channel_id == ChannelEnum.emailMarketing) ? ChannelEnum.email : channel_id
     const leads = result.data.map((r) => {
       const customer = customerInfo.find((contact) => contact.id == r.id)
       const contacts = allContacts.filter((contact) => contact.id_cliente == r.id && contact.canal_contato == channel_id)
-
       return {
         id: r.id,
         nome: r.nome,
@@ -112,14 +113,14 @@ const contactType = {
 async function GetInfoFromTable(token, x_tenand_id, template_id, serch_field, mapCustomerIDs = []) {
   const CRMManagerService = new CRMManagerServiceV2(token, x_tenand_id)
   const template = await CRMManagerService.Template.GetByID(template_id)
-  
+
   const tableFields = template.data.fields.map((field) => field.column)
   const results = []
 
   let hasMoreLeads = true
-  for(let cursor = 0, size = 1000; hasMoreLeads; ) { // TODO: modificar size
+  for(let cursor = 0, size = 1000; hasMoreLeads; ) {
     const result = await CRMManagerService.DataFilter.filterFromTable(
-      template.data.table_name, 
+      template.data.table_name,
       tableFields,
       [ `${serch_field} in (${mapCustomerIDs.join(',')})` ],
       cursor,
@@ -127,9 +128,7 @@ async function GetInfoFromTable(token, x_tenand_id, template_id, serch_field, ma
     )
     hasMoreLeads = result.data.data.length >= size
     cursor = result.data?.cursor?.end
-
     results.push(...result.data.data)
   }
-
   return results
 }
