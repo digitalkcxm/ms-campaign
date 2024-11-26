@@ -62,7 +62,7 @@ class DataFilter {
     try {
 
       const result = await this.instance
-        .post('/api/v1/data/filter', {
+        .post('/api/v2/data/filter', {
           table,
           columnsResult,
           whereClause,
