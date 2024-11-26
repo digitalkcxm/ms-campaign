@@ -53,16 +53,16 @@ class DataFilter {
   }
 
   async filterFromTable(
-    table = 'cliente', 
-    columnsResult, 
-    whereClause = [], 
-    cursor = 0, 
+    table = 'cliente',
+    columnsResult,
+    whereClause = [],
+    cursor = 0,
     size = 10000
   ) {
     try {
 
       const result = await this.instance
-        .post('/api/v2/data/filter', {
+        .post('/api/v1/data/filter', {
           table,
           columnsResult,
           whereClause,
