@@ -10,5 +10,10 @@ function findValue(variable, data = {}) {
     return data?.[variablePath[0]]
   }
 
-  return findValue(variablePath.slice(1).join('.'), data?.[variablePath[0]])
+  const path = variablePath[0]
+  if (data?.[path]) {
+    return findValue(variablePath.slice(1).join('.'), data?.[path])
+  }
+
+  return findValue(variablePath.slice(1).join('.'), data)
 }

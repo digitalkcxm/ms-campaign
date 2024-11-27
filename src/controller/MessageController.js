@@ -1,8 +1,8 @@
-import moment from "moment"
+import moment from 'moment'
 
-import CRMController from "./CRMController.js"
-import RabbitMQService from "../service/RabbitMQService.js"
-import { BrokerWhatsappNameEnum, ChannelNameEnum, BrokerWhatsappEnumIDs, ChannelEnumIDs } from "../model/Enumerations.js"
+import CRMController from './CRMController.js'
+import RabbitMQService from '../service/RabbitMQService.js'
+import { BrokerWhatsappNameEnum, ChannelNameEnum, BrokerWhatsappEnumIDs, ChannelEnumIDs } from '../model/Enumerations.js'
 
 const crmController = new CRMController()
 
@@ -31,10 +31,10 @@ export default class MessageController {
         )
         data.message.message = messageFormatted
       }
-      
+
       const queueMessages = this.#createPhonesMsgPayload(data, phones, variables)
       this.#sendToCampaignQueue(data.company, queueMessages)
-      
+
       return true
     } catch (err) {
       console.error('[MessageController | sendMessage] Erro ao enviar mensagem: ', err)
@@ -68,7 +68,7 @@ export default class MessageController {
       const contactField = this.#getVariable(data.message.phone)
       let phones
 
-      if (contactField.type == "crm" && !data.contato) {
+      if (contactField.type == 'crm' && !data.contato) {
         const { template, table, column, id_crm } = data.crm
         phones = await crmController.getContact(
           data.company.token,
@@ -83,7 +83,7 @@ export default class MessageController {
         phones = [data.contato]
       }
       if (!phones || phones.length == 0)
-        throw new Error("Nenhum telefone encontrado")
+        throw new Error('Nenhum telefone encontrado')
       return phones
     } catch (err) {
       throw err
@@ -102,7 +102,7 @@ export default class MessageController {
       for (const keyVariable of keysVariables) {
         const resultGetVariable = this.#getVariableType(hsm.variable[keyVariable])
 
-        if (resultGetVariable.type == "crm") {
+        if (resultGetVariable.type == 'crm') {
           const resultGetCRM = await crmController.getDataCRM(
             company.token,
             tenantID,
@@ -116,9 +116,9 @@ export default class MessageController {
         } else {
           let variableValue = ticket
           for (const key of resultGetVariable.data) {
-            if (key == "created_at" || key == "updated_at") {
+            if (key == 'created_at' || key == 'updated_at') {
               variableValue = moment(new Date(variableValue[key])).format(
-                "DD/MM/YYYY HH:mm:ss"
+                'DD/MM/YYYY HH:mm:ss'
               )
             } else {
               variableValue = variableValue[key]
@@ -394,16 +394,16 @@ export default class MessageController {
 
   #getVariable(variable) {
     try {
-      const regex = new RegExp("{{(.*?)}}")
+      const regex = new RegExp('{{(.*?)}}')
       const info = regex.exec(variable)
 
       if (!info)
         return {
-          type: "string",
+          type: 'string',
           data: variable,
         }
 
-      const data = info[1].split(".")
+      const data = info[1].split('.')
       return {
         type: data[0],
         data,
@@ -415,12 +415,12 @@ export default class MessageController {
 
   #getVariableType(variable) {
     try {
-      const data = variable.split(".")
+      const data = variable.split('.')
       return {
         type: data[0],
         data,
       }
-      
+
     } catch (err) {
       console.error('[MessageController | #getVariableType] ', err)
     }
@@ -448,7 +448,7 @@ export default class MessageController {
           obj.variable = variable
           obj.key = this.#getVariable(variable)
 
-          if (obj.key.type == "crm") {
+          if (obj.key.type == 'crm') {
             const resultGetCRM = await crmController.getDataCRM(
               company_token,
               tenantID,
@@ -463,9 +463,9 @@ export default class MessageController {
           } else {
             let variableValue = ticketVariables
             for (const key of obj.key.data) {
-              if (key == "created_at" || key == "updated_at") {
+              if (key == 'created_at' || key == 'updated_at') {
                 variableValue = moment(new Date(variableValue[key])).format(
-                  "DD/MM/YYYY HH:mm:ss"
+                  'DD/MM/YYYY HH:mm:ss'
                 )
               } else {
                 variableValue = variableValue[key]
@@ -491,7 +491,7 @@ export default class MessageController {
       return newMessage
     } catch (err) {
       console.log(
-        "🚀 ~ file: InteractionController.js:69 ~ InteractionController ~ #formatMessage ~ err:",
+        '🚀 ~ file: InteractionController.js:69 ~ InteractionController ~ #formatMessage ~ err:',
         err
       )
     }

@@ -51,11 +51,9 @@ export default class MessageSenderActionHandler extends IActionHandler {
           automation_message,
         })
 
-        const messageText = automation_message.message || automation_message.template.html_content
-
         // Formata Message
         const MessageFormatted = this.#formatMessage({
-          messageText,
+          messageText:automation_message.message,
           ticket,
           customer,
           business
