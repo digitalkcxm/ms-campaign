@@ -41,6 +41,7 @@ export const ChannelEnumIDs = {
   4: ChannelNameEnum.Email,
   6: ChannelNameEnum.Phone,
   12: ChannelNameEnum.RCS,
+  18: ChannelNameEnum.Email,
 }
 
 export const BrokerWhatsappNameEnum = {
