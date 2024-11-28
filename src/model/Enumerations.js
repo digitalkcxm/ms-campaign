@@ -31,6 +31,7 @@ export const ChannelNameEnum = {
   SMS: 'SMS',
   Phone: 'Phone',
   Chat: 'Chat',
+  RCS: 'RCS',
 }
 
 export const ChannelEnumIDs = {
@@ -39,6 +40,7 @@ export const ChannelEnumIDs = {
   3: ChannelNameEnum.SMS,
   4: ChannelNameEnum.Email,
   6: ChannelNameEnum.Phone,
+  12: ChannelNameEnum.RCS,
 }
 
 export const BrokerWhatsappNameEnum = {
