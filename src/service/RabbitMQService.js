@@ -12,10 +12,9 @@ export default class RabbitMQService {
         const conn = await producerConn.getInstance()
         const connChannel = await conn.createChannel()
         connections.push(connChannel)
-        
+
         return connChannel
       }
-
       return connections[Math.floor(Math.random() * PoolConnectionLimit - 1)]
     } catch (err) {
       throw new ErrorHelper('RabbitMQService', '#GetChannel', 'An error occurred when creating exchange channel.', err)

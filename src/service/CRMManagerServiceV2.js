@@ -53,10 +53,10 @@ class DataFilter {
   }
 
   async filterFromTable(
-    table = 'cliente', 
-    columnsResult, 
-    whereClause = [], 
-    cursor = 0, 
+    table = 'cliente',
+    columnsResult,
+    whereClause = [],
+    cursor = 0,
     size = 10000
   ) {
     try {

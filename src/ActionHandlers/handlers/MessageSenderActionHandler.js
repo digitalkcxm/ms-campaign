@@ -53,7 +53,7 @@ export default class MessageSenderActionHandler extends IActionHandler {
 
         // Formata Message
         const MessageFormatted = this.#formatMessage({
-          messageText: automation_message.message,
+          messageText:automation_message.message,
           ticket,
           customer,
           business
@@ -92,7 +92,7 @@ export default class MessageSenderActionHandler extends IActionHandler {
       case ChannelBrokerEnum.EmailImap:
         return success({
           data: {
-            // subject: '', 
+            // subject: '',
             to: trigger,
             cc: '',
             bcc: '',
@@ -113,6 +113,17 @@ export default class MessageSenderActionHandler extends IActionHandler {
           }
         })
 
+      case ChannelBrokerEnum.EmailMarketing:
+
+        return success({
+          data: {
+            template: {
+              id: automation_message?.template?.id,
+              variables: this.#getTemplateVariables(automation_message, ticket, customer, business),
+            }
+          }
+        })
+
       default:
         return success({ data: {} })
       }
@@ -120,7 +131,6 @@ export default class MessageSenderActionHandler extends IActionHandler {
       console.error(`[${this.actionName}.#GetChannelDetails]`, err)
       return error({ message: 'Erro ao resgatar detalhes do canal.', error: err })
     }
-
   }
 
   #getHSMVariables(
@@ -150,6 +160,29 @@ export default class MessageSenderActionHandler extends IActionHandler {
     return variablesFormatted
   }
 
+  #getTemplateVariables(
+    automation_message,
+    ticket,
+    customer,
+    business
+  ) {
+    const variablesFormatted = {}
+    const scopes = {
+      ticket,
+      crm: customer,
+      customer,
+      business,
+    }
+    const keysVariables = Object.keys(automation_message?.template?.variables || {})
+    for (const key of keysVariables) {
+      const variable = GetVariablesInfo(automation_message.template.variables[key])
+      const data = scopes?.[variable.type]
+      const value = GetValue(variable.path, data)
+      variablesFormatted[key] = value || ''
+    }
+    return variablesFormatted
+  }
+
   #formatMessage({ messageText, ticket, customer, business }) {
 
     let messageFormatted = messageText || ''
@@ -161,7 +194,7 @@ export default class MessageSenderActionHandler extends IActionHandler {
     }
 
     // Pega todas as variáveis do texto
-    const variables = messageFormatted.match(/{{(.*?)}}/g)
+    const variables = messageFormatted.match(/(?<!\{)\{\{[^{}]*\}\}(?!\})/g)
     if (!variables?.length)
       return success({ data: messageFormatted })
 
@@ -175,7 +208,6 @@ export default class MessageSenderActionHandler extends IActionHandler {
 
     return success({ data: messageFormatted })
   }
-
 
 
 }
