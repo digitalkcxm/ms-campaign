@@ -58,7 +58,7 @@ async function GetLeadByCRM(authToken, tenantID, filter, channel_id) {
 
     // Get Leads by Filter
     const result = await CRMManagerService.DataFilter.getLeadsByFilter(filter)
-    if (!result.data.length) return success({
+    if (!result?.data?.length) return success({
       data: {
         isMailing: false,
         result: []
