@@ -9,11 +9,11 @@ RUN npm ci
 RUN npm audit fix
 
 COPY . .
-ENV PORT 8080
+ENV PORT 80
 
 # RUN npm run migrate:latest
 
-EXPOSE 8008
+EXPOSE 80
 
 CMD ["npm", "run", "start:prod"]
 
