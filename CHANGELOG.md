@@ -1,3 +1,10 @@
+# [0.6.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.5.0...v0.6.0) (2024-12-03)
+
+
+### Features
+
+* move dockefile to outside folder ([e4b46d5](https://github.com/digitalkcxm/ms-campaign/commit/e4b46d508ac78ae13eeec898c38a105f2f3989e9))
+
 # [0.5.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.4.0...v0.5.0) (2024-12-03)
 
 
