@@ -1,3 +1,10 @@
+# [0.3.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.2.0...v0.3.0) (2024-12-03)
+
+
+### Features
+
+* trigger build ([6b77211](https://github.com/digitalkcxm/ms-campaign/commit/6b77211766aea1ba76e34bcd90ddcd49a6d94180))
+
 # [0.2.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.1.5...v0.2.0) (2024-12-03)
 
 
