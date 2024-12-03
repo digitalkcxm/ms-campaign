@@ -1,3 +1,10 @@
+# [0.5.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.4.0...v0.5.0) (2024-12-03)
+
+
+### Features
+
+* replace dockerfile copy path ([110d47c](https://github.com/digitalkcxm/ms-campaign/commit/110d47c7ea1828f1104a7cce9d690962e380391f))
+
 # [0.4.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.3.0...v0.4.0) (2024-12-03)
 
 
