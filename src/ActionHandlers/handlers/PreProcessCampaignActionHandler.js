@@ -7,9 +7,11 @@ import CompanyModel from '../../model/CompanyModel.js'
 import { ActionTypeEnum, ChannelEnumIDs, status } from '../../model/Enumerations.js'
 import CompanyService from '../../service/CompanyService.js'
 import CRMManagerService from '../../service/CRMManagerService.js'
-import RabbitMQService from '../../service/RabbitMQService.js'
+// import RabbitMQService from '../../service/RabbitMQService.js'
 import WorkflowServiceV2 from '../../service/WorkflowServiceV2.js'
 import IActionHandler from '../abstracts/IActionHandler.js'
+
+import mqConnection from '../../config/rabbitmq/rabbitmq-connection.js'
 
 export default class PreProcessCampaignActionHandler extends IActionHandler {
 
@@ -149,7 +151,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
     try {
  
       for(const lead of leadsCreated) {
-        await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
+        await mqConnection.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
           type: ActionTypeEnum.SendMessage,
           company: company,
           campaign_id: campaignInfo.id,
@@ -164,7 +166,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
         })
       }
 
-      await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
+      await mqConnection.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
         type: ActionTypeEnum.UpdateStatusCampaign,
         company: company,
         campaign_id: campaignInfo.id,
@@ -227,7 +229,7 @@ export default class PreProcessCampaignActionHandler extends IActionHandler {
       
       await this.#SendToPreProcessMessage(company, campaignInfo, result.data)
       for(let lead of result.data) {
-        await RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
+        await mqConnection.sendToQueue(`campaign:events:${company.name}`, {
           event: 'create_ticket',
           data: lead.ticket,
         })

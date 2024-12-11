@@ -1,7 +1,7 @@
 import dotenv from 'dotenv'
 import amqp from 'amqplib'
 
-dotenv.config({ path: `../../` })
+dotenv.config({ path: '../../' })
 
 const newConnection = async () => {
   const user = process.env.RABBITMQ_USER
@@ -54,6 +54,6 @@ const consumerConnSingleton = (() => {
 })()
 
 export {
-    producerConnSingleton as producerConn,
-    consumerConnSingleton as consumerConn,
+  producerConnSingleton as producerConn,
+  consumerConnSingleton as consumerConn,
 }

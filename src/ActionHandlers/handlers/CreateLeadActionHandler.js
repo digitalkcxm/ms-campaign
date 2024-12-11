@@ -6,7 +6,9 @@ import { ActionTypeEnum, ChannelEnumIDs, status } from '../../model/Enumerations
 import CampaignModel from '../../model/CampaignModel.js'
 import CampaignVersionModel from '../../model/CampaignVersionModel.js'
 import { success, error } from '../../helper/patterns/ReturnPatters.js'
-import RabbitMQService from '../../service/RabbitMQService.js'
+// import RabbitMQService from '../../service/RabbitMQService.js'
+
+import mqConnection from '../../config/rabbitmq/rabbitmq-connection.js'
 
 export default class CreateLeadActionHandler extends IActionHandler {
   constructor(database, redis, logger) {
@@ -90,7 +92,7 @@ export default class CreateLeadActionHandler extends IActionHandler {
       //   this.#createNegotiation(data.company, data.tenantID, data.customer.id_crm, createTicket.id_seq, data.negotiation)
       // }
 
-      RabbitMQService.sendToQueue(`campaign:events:${company.name}`, {
+      mqConnection.sendToQueue(`campaign:events:${company.name}`, {
         event: 'create_ticket',
         data: ticket,
       })
@@ -105,7 +107,7 @@ export default class CreateLeadActionHandler extends IActionHandler {
   async #sendMessage(company, campaign_id, campaign_version_id, ticket, data) {
     try {
 
-      await RabbitMQService.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
+      await mqConnection.sendToExchangeQueue('campaign_execution', 'campaign_execution', {
         type: ActionTypeEnum.SendMessage,
         company: company,
         campaign_id: campaign_id,
