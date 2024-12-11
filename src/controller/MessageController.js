@@ -1,8 +1,15 @@
 import moment from 'moment'
 
 import CRMController from './CRMController.js'
-import RabbitMQService from '../service/RabbitMQService.js'
-import { BrokerWhatsappNameEnum, ChannelNameEnum, BrokerWhatsappEnumIDs, ChannelEnumIDs } from '../model/Enumerations.js'
+// import RabbitMQService from '../service/RabbitMQService.js'
+import {
+  BrokerWhatsappNameEnum,
+  ChannelNameEnum,
+  BrokerWhatsappEnumIDs,
+  ChannelEnumIDs,
+} from '../model/Enumerations.js'
+
+import mqConnection from '../config/rabbitmq/rabbitmq-connection.js'
 
 const crmController = new CRMController()
 
@@ -14,10 +21,10 @@ export default class MessageController {
 
       if (
         ChannelEnumIDs[data.channel.id] === ChannelNameEnum.Whatsapp &&
-        BrokerWhatsappEnumIDs[data.channel.broker_id] == BrokerWhatsappNameEnum.Gupshup
+        BrokerWhatsappEnumIDs[data.channel.broker_id] ==
+          BrokerWhatsappNameEnum.Gupshup
       ) {
         variables = await this.#getVariables(data)
-
       } else {
         const { company, crm, ticket, tenantID, message } = data
         const messageFormatted = await this.#formatMessage(
@@ -32,12 +39,19 @@ export default class MessageController {
         data.message.message = messageFormatted
       }
 
-      const queueMessages = this.#createPhonesMsgPayload(data, phones, variables)
+      const queueMessages = this.#createPhonesMsgPayload(
+        data,
+        phones,
+        variables
+      )
       this.#sendToCampaignQueue(data.company, queueMessages)
 
       return true
     } catch (err) {
-      console.error('[MessageController | sendMessage] Erro ao enviar mensagem: ', err)
+      console.error(
+        '[MessageController | sendMessage] Erro ao enviar mensagem: ',
+        err
+      )
       return false
     }
   }
@@ -57,37 +71,33 @@ export default class MessageController {
         subject: subject || '',
         hsm: {
           ...hsm,
-          variables: variables || hsm?.variables
-        }
+          variables: variables || hsm?.variables,
+        },
       }
     })
   }
 
   async #getPhones(data) {
-    try {
-      const contactField = this.#getVariable(data.message.phone)
-      let phones
+    const contactField = this.#getVariable(data.message.phone)
+    let phones
 
-      if (contactField.type == 'crm' && !data.contato) {
-        const { template, table, column, id_crm } = data.crm
-        phones = await crmController.getContact(
-          data.company.token,
-          data.tenantID,
-          contactField.data[1],
-          table,
-          column,
-          id_crm,
-          data.channel.id
-        )
-      } else {
-        phones = [data.contato]
-      }
-      if (!phones || phones.length == 0)
-        throw new Error('Nenhum telefone encontrado')
-      return phones
-    } catch (err) {
-      throw err
+    if (contactField.type == 'crm' && !data.contato) {
+      const { template, table, column, id_crm } = data.crm
+      phones = await crmController.getContact(
+        data.company.token,
+        data.tenantID,
+        contactField.data[1],
+        table,
+        column,
+        id_crm,
+        data.channel.id
+      )
+    } else {
+      phones = [data.contato]
     }
+    if (!phones || phones.length == 0)
+      throw new Error('Nenhum telefone encontrado')
+    return phones
   }
 
   async #getVariables(data) {
@@ -100,7 +110,9 @@ export default class MessageController {
       const keysVariables = Object.keys(hsm.variable)
 
       for (const keyVariable of keysVariables) {
-        const resultGetVariable = this.#getVariableType(hsm.variable[keyVariable])
+        const resultGetVariable = this.#getVariableType(
+          hsm.variable[keyVariable]
+        )
 
         if (resultGetVariable.type == 'crm') {
           const resultGetCRM = await crmController.getDataCRM(
@@ -138,7 +150,7 @@ export default class MessageController {
   async #sendToCampaignQueue(company, messages) {
     const queue_name = `campaign:send_messages:${company.name}`
     for (const message of messages) {
-      await RabbitMQService.sendToQueue(queue_name, message)
+      await mqConnection.sendToQueue(queue_name, message)
     }
   }
 
@@ -420,7 +432,6 @@ export default class MessageController {
         type: data[0],
         data,
       }
-
     } catch (err) {
       console.error('[MessageController | #getVariableType] ', err)
     }

@@ -4,8 +4,10 @@ import { error, success } from '../../helper/patterns/ReturnPatters.js'
 import CampaignModel from '../../model/CampaignModel.js'
 import CampaignVersionModel from '../../model/CampaignVersionModel.js'
 import { ChannelBrokerEnum, GetChannelBroker } from '../../model/Enumerations.js'
-import RabbitMQService from '../../service/RabbitMQService.js'
+// import RabbitMQService from '../../service/RabbitMQService.js'
 import IActionHandler from '../abstracts/IActionHandler.js'
+
+import mqConnection from '../../config/rabbitmq/rabbitmq-connection.js'
 
 export default class MessageSenderActionHandler extends IActionHandler {
 
@@ -59,7 +61,7 @@ export default class MessageSenderActionHandler extends IActionHandler {
           business
         })
 
-        await RabbitMQService.sendToQueue(`campaign:send_messages:${company.name}`, {
+        await mqConnection.sendToQueue(`campaign:send_messages:${company.name}`, {
           token: ChannelConfig.token,
           ticket: ticket,
           channel_id: ChannelConfig.channel_id,

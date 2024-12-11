@@ -39,7 +39,7 @@ export default class RabbitMQService {
         headers: { 'x-delay': delayInMilliseconds }
       })
     } catch (err) {
-      throw new ErrorHelper('RabbitMQService', 'sendToExchangeQueue', 'An error occurred when sending to the exchange queue deleayed.', { exchange, routingKey, data, delayInMilliseconds }, err)
+      throw new ErrorHelper('RabbitMQService', 'sendToExchangeQueue', 'An error occurred when sending to the exchange queue delayed.', { exchange, routingKey, data, delayInMilliseconds }, err)
     }
   }
 

@@ -1,8 +1,10 @@
 import moment from 'moment'
 import { ActionTypeEnum, status } from '../model/Enumerations.js'
 import ErrorHelper from '../helper/ErrorHelper.js'
-import RabbitMQService from '../service/RabbitMQService.js'
+// import RabbitMQService from '../service/RabbitMQService.js'
 import CampaignVersionModel from '../model/CampaignVersionModel.js'
+
+import mqConnection from '../config/rabbitmq/rabbitmq-connection.js'
 
 export default class CampaignVersionController {
   constructor(database = {}, logger = {}) {
@@ -77,7 +79,7 @@ export default class CampaignVersionController {
         campaign_version_id
       }
 
-      await RabbitMQService.sendToExchangeQueueDelayed(
+      await mqConnection.sendToExchangeQueueDelayed(
         'campaign_scheduling',
         'campaign_scheduling',
         campaignPayloadScheduler,
