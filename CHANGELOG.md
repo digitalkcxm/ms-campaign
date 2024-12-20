@@ -1,3 +1,10 @@
+## [0.6.1](https://github.com/digitalkcxm/ms-campaign/compare/v0.6.0...v0.6.1) (2024-12-20)
+
+
+### Bug Fixes
+
+* project name ([aae3279](https://github.com/digitalkcxm/ms-campaign/commit/aae3279957cde8461b50d9a9574ea98badd3820f))
+
 # [0.6.0](https://github.com/digitalkcxm/ms-campaign/compare/v0.5.0...v0.6.0) (2024-12-03)
 
 
