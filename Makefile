@@ -1,7 +1,3 @@
-start-services:
-	- ./docker/scripts/init.sh
-stop-services:
-	- docker compose down
 build:
 	- docker build -f docker/Dockerfile-develop -t ms-campaign-container:latest .
 start:
@@ -10,3 +6,5 @@ exec:
 	- docker exec -it ms-campaign-container /bin/sh
 logs:
 	- docker logs -f --tail 50 --timestamps ms-campaign-container
+test:
+	- make build && make start
