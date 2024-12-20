@@ -9,7 +9,7 @@ RUN npm ci
 RUN npm audit fix
 
 COPY . .
-
+COPY .env .env
 # RUN npm run migrate:latest
 
 EXPOSE 80
