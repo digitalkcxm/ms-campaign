@@ -67,7 +67,7 @@ export const GetChannelBroker = (channel_id, broker_id) => {
     '2:1': ChannelBrokerEnum.WhatsappDigitalk,
     '2:3': ChannelBrokerEnum.WhatsappOficial,
     '18:2': ChannelBrokerEnum.EmailMarketing,
-    '12:5': ChannelBrokerEnum.Rcs,
+    '12:9': ChannelBrokerEnum.Rcs,
   }
 
   const chanBrok = `${channel_id}:${broker_id}`
