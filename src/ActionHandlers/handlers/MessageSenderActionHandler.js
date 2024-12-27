@@ -126,6 +126,14 @@ export default class MessageSenderActionHandler extends IActionHandler {
           }
         })
 
+      case ChannelBrokerEnum.Rcs:
+        return success({
+          data: {
+            template: automation_message?.template?.id,
+            variables: this.#getTemplateVariables(automation_message, ticket, customer, business)
+          }
+        })
+
       default:
         return success({ data: {} })
       }
