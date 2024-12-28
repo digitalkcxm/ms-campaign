@@ -51,10 +51,6 @@ MSWORKFLOW='http://localhost:5053'
 REDIS_HOST='localhost'
 REDIS_PORT='6379'
 
-#INFORMAÇÕES APM
-APM_SERVER_URL='https://apm.digitalk.com.br'
-APP_ENVIRONMENT='local'
-
 #Login Core
 COREEMAIL='email@email.com'
 COREPASS='pass'

@@ -8,7 +8,6 @@ import cors from './cors.js'
 import Redis from './redis.js'
 import routes from './routes.js'
 import logger from './logger.js'
-import tracing from './elastic-apm.js'
 import rabbitmq from '../config/RabbitMQ.js'
 import AppVariables from './appVariables.js'
 import database from './database/database.js'
@@ -27,7 +26,7 @@ cors(app)
 app.use(helmet())
 app.use(compression())
 
-routes(app, database, logger, redis, tracing)
+routes(app, database, logger, redis)
 
 function startServer() {
   app.use(httpLogger)
@@ -36,4 +35,4 @@ function startServer() {
   )
 }
 
-export { startServer, app, database, logger, connRabbit, redis, tracing }
+export { startServer, app, database, logger, connRabbit, redis }

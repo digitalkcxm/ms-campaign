@@ -20,8 +20,6 @@ export default class AppVariables {
   static RedisHost() { return global._variables['REDIS_HOST'] }
   static RedisPort() { return global._variables['REDIS_PORT'] }
   static ProjectName() { return global._variables['PROJECT_NAME'] }
-  static APMServerURL() { return global._variables['APM_SERVER_URL'] }
-  static APPEnvironment() { return global._variables['APP_ENVIRONMENT'] }
   static MSCRMManager() { return global._variables['MSCRMMANAGER'] }
   static MSWorkflow() { return global._variables['MSWORKFLOW'] }
   static CoreEMail() { return global._variables['COREEMAIL'] }
