@@ -9,6 +9,7 @@
   },
   "scripts": {
     "start": "node src/index.js",
+    "start:prod": "node src/index.js",
     "dev": "nodemon src/index.js",
     "test": "echo \"Error: no test specified\"",
     "test:watch": "node --experimental-vm-modules node_modules/jest/bin/jest.js --watchAll",
